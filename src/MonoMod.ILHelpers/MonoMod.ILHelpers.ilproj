@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.IL/6.0.0">
+﻿<Project Sdk="Microsoft.NET.Sdk.IL">
   <!-- LMAO this doesn't actually need anything, everything it needs is in tools/Common.IL.{props,targets} -->
 
   <PropertyGroup>

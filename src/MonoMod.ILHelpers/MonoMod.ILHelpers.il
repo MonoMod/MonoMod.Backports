@@ -31,33 +31,23 @@
         callvirt instance !0 class [FUNC_ASSEMBLY]System.Func`1<!!T>::Invoke()
         ret
     }
-
-    // This exists to work around the fact that on old Mono, the normal string pinning sequence is broken.
-    // See docs/RuntimeIssueNodes.md
-    .method public hidebysig static native int GetRawDataOffset(object obj, uint8& rawData) cil managed aggressiveinlining
+    
+    .method public hidebysig static !!T& ObjectAsRef<T>(object obj) cil managed aggressiveinlining
     {
-        .custom instance void System.Runtime.CompilerServices.NullableContextAttribute::.ctor(uint8) = (
-            01 00 01 00 00
+        .locals (
+            object pinned pin,
+            !!T*& ref
         )
-
-        .maxstack 8
-        .locals init (
-            object pinned str,
-            void*& ptrRef
-        )
-
-        ldarg.1
-        conv.u
-
-        ldarg.0
-        stloc str
-        ldloca str
-        conv.u
-        stloc ptrRef
-        ldloc ptrRef
+        
+        ldarg obj
+        stloc pin
+        
+        ldloca pin
         ldind.i
-        sub
-
+        // i wanted to just use AsRef, but for some reason i cant? will figure out later
+        // call uint8& System.Runtime.CompilerServices.Unsafe::AsRef<uint8>(void*)
+        stloc ref
+        ldloc ref
         ret
     }
 

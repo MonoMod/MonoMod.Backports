@@ -67,36 +67,4 @@
 
         ret
     }
-
-    .method public hidebysig static !!T& UnboxAnyUnsafe<T>(object& 'box') cil managed aggressiveinlining
-    {
-        .custom instance void System.Runtime.CompilerServices.NullableContextAttribute::.ctor(uint8) = (
-            01 00 02 00 00
-        )
-
-        .maxstack 8
-        .locals init (
-            [0] !!T
-        )
-
-        // if (default(T) == null)
-        ldloca.s 0
-        initobj !!T
-        ldloc.0
-        box !!T
-        ldnull
-        ceq
-        brfalse ValType
-
-        // it's a reference type, so we just return the ref like Unsafe.As
-        ldarg.0
-        ret
-
-      ValType:
-        // it's a value type, so we want to unbox and return the ref
-        ldarg.0
-        ldind.ref
-        unbox !!T
-        ret
-    }
 }

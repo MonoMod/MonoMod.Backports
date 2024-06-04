@@ -35,8 +35,10 @@
     .method public hidebysig static !!T& ObjectAsRef<T>(object obj) cil managed aggressiveinlining
     {
         .locals (
-            object pinned pin,
-            !!T*& ref
+            object pinned pin
+#ifndef netcoreapp
+            , !!T& ref
+#endif
         )
         
         ldarg obj
@@ -44,10 +46,11 @@
         
         ldloca pin
         ldind.i
-        // i wanted to just use AsRef, but for some reason i cant? will figure out later
-        // call uint8& System.Runtime.CompilerServices.Unsafe::AsRef<uint8>(void*)
+        // call !0& System.Runtime.CompilerServices.Unsafe::AsRef<!!T>(void*)
+#ifndef netcoreapp
         stloc ref
         ldloc ref
+#endif
         ret
     }
 

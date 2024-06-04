@@ -31,32 +31,39 @@
         callvirt instance !0 class [FUNC_ASSEMBLY]System.Func`1<!!T>::Invoke()
         ret
     }
-
-    // This exists to work around the fact that on old Mono, the normal string pinning sequence is broken.
-    // See docs/RuntimeIssueNodes.md
-    .method public hidebysig static native int GetRawDataOffset(object obj, uint8& rawData) cil managed aggressiveinlining
+    
+    .method public hidebysig static !!T& ObjectAsRef<T>(object obj) cil managed aggressiveinlining
     {
-        .custom instance void System.Runtime.CompilerServices.NullableContextAttribute::.ctor(uint8) = (
-            01 00 01 00 00
+        .maxstack 1
+        .locals (
+            object pinned pin
+#ifndef netcoreapp
+            , !!T** refPtr
+            , !!T& finalRef
+#endif
         )
 
-        .maxstack 8
-        .locals init (
-            object pinned str,
-            void*& ptrRef
-        )
+        // pin obj
+        ldarg obj
+        stloc pin
 
-        ldarg.1
+#ifdef netcoreapp
+        // return ref *Unsafe.BitCast<object, T*>(pin);
+        ldloc pin
         conv.u
-
-        ldarg.0
-        stloc str
-        ldloca str
+#else
+        // see docs/RuntimeIssueNotes.md - "`fixed` on strings in old Mono" for why this is necessary
+        // T* ptr = *(T**)(&pin);
+        ldloca pin
         conv.u
-        stloc ptrRef
-        ldloc ptrRef
+        stloc refPtr
+        ldloc refPtr
         ldind.i
-        sub
+        // return Unsafe.AsRef<T>(ptr);
+        // see the comments inside that function for why don't just immediately ret
+        stloc finalRef
+        ldloc finalRef
+#endif
 
         ret
     }

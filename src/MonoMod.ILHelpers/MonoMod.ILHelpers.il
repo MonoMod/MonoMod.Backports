@@ -34,24 +34,38 @@
     
     .method public hidebysig static !!T& ObjectAsRef<T>(object obj) cil managed aggressiveinlining
     {
+#ifdef netcoreapp
+        ldarg obj
+        conv.u
+        ret
+#else
         .locals (
-            object pinned pin
-#ifndef netcoreapp
-            , !!T& ref
+            object pinned pin,
+            !!T& finalRef
+#ifdef NET35
+            , !!T** refPtr
 #endif
         )
         
         ldarg obj
         stloc pin
         
+        // see https://nike4613.github.io/MonoMod/docs/RuntimeIssueNotes.html#fixed-on-strings-in-old-mono
+#ifdef NET35
         ldloca pin
+        conv.u
+        stloc refPtr
+        ldloc refPtr
         ldind.i
-        // call !0& System.Runtime.CompilerServices.Unsafe::AsRef<!!T>(void*)
-#ifndef netcoreapp
-        stloc ref
-        ldloc ref
+#else
+        ldloc pin
+        conv.u
 #endif
+        // call !0& System.Runtime.CompilerServices.Unsafe::AsRef<!!T>(void*)
+        stloc finalRef
+        ldloc finalRef
         ret
+#endif
     }
 
     .method public hidebysig static !!T& UnboxAnyUnsafe<T>(object& 'box') cil managed aggressiveinlining

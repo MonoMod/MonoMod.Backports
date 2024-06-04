@@ -274,7 +274,7 @@ namespace System
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal ref T DangerousGetPinnableReference() =>
-            ref Unsafe.Add(ref ILHelpers.ObjectAsRef<T>(_pinnable), _byteOffset);
+            ref Unsafe.AddByteOffset(ref ILHelpers.ObjectAsRef<T>(_pinnable), _byteOffset);
 
         // These expose the internal representation for Span-related apis use only.
         internal object? Pinnable => _pinnable;

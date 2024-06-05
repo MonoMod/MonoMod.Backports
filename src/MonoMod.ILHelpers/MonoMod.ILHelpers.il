@@ -18,7 +18,7 @@
     {
         .maxstack 8
         ldarg.0
-        tail.
+        //tail. // The tail prefix on calli seems to be considered by many tools to be invalid.
         calli !!T()
         ret
     } // end of method Unsafe::Read

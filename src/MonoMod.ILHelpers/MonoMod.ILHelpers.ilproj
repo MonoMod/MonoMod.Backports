@@ -6,6 +6,9 @@
 
     <VersionPrefix>1.1.0</VersionPrefix>
     <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion>
+    
+    <!-- TODO: how do we want to handle the removal of this package? -->
+    <Pack>false</Pack>
   </PropertyGroup>
   
 </Project>

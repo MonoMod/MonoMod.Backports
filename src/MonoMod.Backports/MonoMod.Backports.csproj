@@ -5,7 +5,8 @@
     
     <!-- We're not going to be having any of the logic that would use the shared sources, so we'll just not include them -->
     <MMSharedSourceFiles>false</MMSharedSourceFiles>
-    <MMIncludeUnsafeAlias>true</MMIncludeUnsafeAlias>
+    <MMIncludeUnsafeAlias>false</MMIncludeUnsafeAlias>
+    <MMReferenceILHelpers>false</MMReferenceILHelpers>
     <MMReferenceUtils>false</MMReferenceUtils>
     <MMReferenceBackports>false</MMReferenceBackports>
     <RootNamespace><![CDATA[ ]]></RootNamespace>
@@ -26,6 +27,14 @@
     <BclHasOobImpls Condition="('$(MMTFKind)' == '.NETStandard' and $([MSBuild]::VersionGreaterThanOrEquals('$(MMTFVersion)','2.1')))
                     or ('$(MMTFKind)' == '.NETCoreApp' and $([MSBuild]::VersionGreaterThanOrEquals('$(MMTFVersion)','2.1')))">true</BclHasOobImpls>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Manually reference ILHelpers -->
+    <ProjectReference Include="$(MMSourcePath)MonoMod.ILHelpers\MonoMod.ILHelpers.ilproj">
+      <Aliases>ilhelpers</Aliases>
+      <PrivateAssets>all</PrivateAssets>
+    </ProjectReference>
+  </ItemGroup>
 
   <!-- We only actually want to take a dependency on the packages when they're necessary -->
   <ItemGroup Condition="!('$(MMTFKind)' == '.NETFramework' and $([MSBuild]::VersionLessThan('$(MMTFVersion)','4.5')))">

@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- MAKE SURE TO KEEP THIS IN SYNC WITH ILHELPERS -->
     <TargetFrameworks>$(TargetFrameworks);netstandard2.1;netcoreapp2.1;netcoreapp3.0;netcoreapp3.1</TargetFrameworks>
     
     <!-- We're not going to be having any of the logic that would use the shared sources, so we'll just not include them -->

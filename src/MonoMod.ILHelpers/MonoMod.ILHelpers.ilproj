@@ -3,6 +3,9 @@
 
   <PropertyGroup>
     <Descripton>A collection of IL helpers for MonoMod, including a backport of System.Runtime.CompilerServices.Unsafe.</Descripton>
+    
+    <!-- MAKE SURE TO KEEP THIS IN SYNC WITH BACKPORTS -->
+    <TargetFrameworks>$(TargetFrameworks);netstandard2.1;netcoreapp2.1;netcoreapp3.0;netcoreapp3.1</TargetFrameworks>
 
     <VersionPrefix>1.1.0</VersionPrefix>
     <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion>

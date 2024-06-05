@@ -9,18 +9,11 @@
 
 .assembly extern MonoMod.Backports { }
 
-#ifdef NET40_OR_GREATER
-    #define UNSAFE_ILHELPERS
-#endif
-#ifdef NETSTANDARD1_0_OR_GREATER
+#ifdef NETSTANDARD2_1_OR_GREATER
     #define UNSAFE_ILHELPERS
 #endif
 #ifdef NETCOREAPP1_0_OR_GREATER
     #define UNSAFE_ILHELPERS
-#endif
-
-#ifndef UNSAFE_ILHELPERS
-    #define UNSAFE_BACKPORTS
 #endif
 
 #ifdef NET6_0_OR_GREATER

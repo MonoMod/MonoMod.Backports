@@ -1,4 +1,4 @@
-﻿#if NET40_OR_GREATER || NETSTANDARD1_0_OR_GREATER || NETCOREAPP || NET
+﻿#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP || NET
 #define UNSAFE_IN_ILHELPERS
 #endif
 
@@ -130,12 +130,45 @@ public static unsafe class Unsafe
 #nullable enable
     #endregion
 
-    [MethodImpl(MethodImplOptionsEx.AggressiveInlining), NonVersionable]
-    public static int SizeOf<T>()
-        // TODO: specialize impl on net35 for mono workaround
-        => ILImpl.SizeOf<T>();
+#if !UNSAFE_IN_ILHELPERS
+    // See docs/RuntimeIssueNotes.md. Until 2015, Mono returned incorrect values for the sizeof opcode when applied to a type parameter.
+    // To deal with this, we need to compute type size in another way, and return it as appropriate, specializing all of the below accordingly.
+    private static class PerTypeValues<T>
+    {
+        public static readonly nint TypeSize = ComputeTypeSize();
 
-    // TODO: fix Add and Subtract on net35 for Mono workaround
+        private static nint ComputeTypeSize()
+        {
+            var array = new T[2];
+            return ILImpl.ByteOffset(ref array[0], ref array[1]);
+        }
+    }
+
+    [MethodImpl(MethodImplOptionsEx.AggressiveInlining), NonVersionable]
+    public static int SizeOf<T>() => (int)PerTypeValues<T>.TypeSize;
+
+    [MethodImpl(MethodImplOptionsEx.AggressiveInlining), NonVersionable]
+    public static ref T Add<T>(ref T source, int elementOffset) => ref ILImpl.AddByteOffset(ref source, (nint)elementOffset * PerTypeValues<T>.TypeSize);
+    [MethodImpl(MethodImplOptionsEx.AggressiveInlining), NonVersionable]
+    public static void* Add<T>(void* source, int elementOffset) => (byte*)source + (elementOffset * PerTypeValues<T>.TypeSize);
+    [MethodImpl(MethodImplOptionsEx.AggressiveInlining), NonVersionable]
+    public static ref T Add<T>(ref T source, nint elementOffset) => ref ILImpl.AddByteOffset(ref source, elementOffset * PerTypeValues<T>.TypeSize);
+    [MethodImpl(MethodImplOptionsEx.AggressiveInlining), NonVersionable]
+    public static ref T Add<T>(ref T source, nuint elementOffset) => ref ILImpl.AddByteOffset(ref source, elementOffset * (nuint)PerTypeValues<T>.TypeSize);
+
+    [MethodImpl(MethodImplOptionsEx.AggressiveInlining), NonVersionable]
+    public static ref T Subtract<T>(ref T source, int elementOffset) => ref ILImpl.SubtractByteOffset(ref source, (nint)elementOffset * PerTypeValues<T>.TypeSize);
+    [MethodImpl(MethodImplOptionsEx.AggressiveInlining), NonVersionable]
+    public static void* Subtract<T>(void* source, int elementOffset) => (byte*)source - (elementOffset * PerTypeValues<T>.TypeSize);
+    [MethodImpl(MethodImplOptionsEx.AggressiveInlining), NonVersionable]
+    public static ref T Subtract<T>(ref T source, nint elementOffset) => ref ILImpl.SubtractByteOffset(ref source, elementOffset * PerTypeValues<T>.TypeSize);
+    [MethodImpl(MethodImplOptionsEx.AggressiveInlining), NonVersionable]
+    public static ref T Subtract<T>(ref T source, nuint elementOffset) => ref ILImpl.SubtractByteOffset(ref source, elementOffset * (nuint)PerTypeValues<T>.TypeSize);
+
+#else
+
+    [MethodImpl(MethodImplOptionsEx.AggressiveInlining), NonVersionable]
+    public static int SizeOf<T>() => ILImpl.SizeOf<T>();
 
     [MethodImpl(MethodImplOptionsEx.AggressiveInlining), NonVersionable]
     public static ref T Add<T>(ref T source, int elementOffset) => ref ILImpl.Add(ref source, elementOffset);
@@ -155,4 +188,5 @@ public static unsafe class Unsafe
     [MethodImpl(MethodImplOptionsEx.AggressiveInlining), NonVersionable]
     public static ref T Subtract<T>(ref T source, nuint elementOffset) => ref ILImpl.Subtract(ref source, elementOffset);
 
+#endif
 }

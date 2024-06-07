@@ -2,16 +2,31 @@
   <!-- LMAO this doesn't actually need anything, everything it needs is in tools/Common.IL.{props,targets} -->
 
   <PropertyGroup>
-    <Descripton>A collection of IL helpers for MonoMod, including a backport of System.Runtime.CompilerServices.Unsafe.</Descripton>
+    <Descripton># DO NOT REFERENCE THIS PACKAGE DIRECTLY! Reference MonoMod.Backports instead.</Descripton>
     
-    <!-- MAKE SURE TO KEEP THIS IN SYNC WITH BACKPORTS -->
-    <TargetFrameworks>$(TargetFrameworks);netstandard2.1;netcoreapp2.1;netcoreapp3.0;netcoreapp3.1</TargetFrameworks>
+    <!-- target frameworks are defined in Common.props -->
+    <TargetFrameworks>$(BackportsTargetFrameworks)</TargetFrameworks>
 
     <VersionPrefix>1.1.0</VersionPrefix>
     <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion>
-    
-    <!-- TODO: how do we want to handle the removal of this package? -->
-    <IsPackable>false</IsPackable>
   </PropertyGroup>
+
+  <!-- Manually add Backports reference to NuGetizer set -->
+  <Target Name="AddBackportsReference" BeforeTargets="GetPackageContents">
+    <MSBuild Projects="$(MMSourcePath)MonoMod.Backports\MonoMod.Backports.csproj"
+             Targets="GetProperties"
+             Properties="PropertyNames=PackageId;Version">
+      <Output TaskParameter="TargetOutputs" ItemName="BackportsProps" />
+    </MSBuild>
+
+    <PropertyGroup>
+      <BackportsPackageId Condition="'%(BackportsProps.Identity)' == 'PackageId'">%(Value)</BackportsPackageId>
+      <BackportsVersion Condition="'%(BackportsProps.Identity)' == 'Version'">%(Value)</BackportsVersion>
+    </PropertyGroup>
+    
+    <ItemGroup>
+      <PackageFile Include="$(BackportsPackageId)" Version="$(BackportsVersion)" PackFolder="Dependency" />
+    </ItemGroup>
+  </Target>
   
 </Project>

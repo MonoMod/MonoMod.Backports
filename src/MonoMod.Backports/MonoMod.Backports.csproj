@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- MAKE SURE TO KEEP THIS IN SYNC WITH ILHELPERS -->
-    <TargetFrameworks>$(TargetFrameworks);netstandard2.1;netcoreapp2.1;netcoreapp3.0;netcoreapp3.1</TargetFrameworks>
+    <!-- target frameworks are defined in Common.props -->
+    <TargetFrameworks>$(BackportsTargetFrameworks)</TargetFrameworks>
     
     <!-- We're not going to be having any of the logic that would use the shared sources, so we'll just not include them -->
     <MMSharedSourceFiles>false</MMSharedSourceFiles>
@@ -33,7 +33,6 @@
     <!-- Manually reference ILHelpers -->
     <ProjectReference Include="$(MMSourcePath)MonoMod.ILHelpers\MonoMod.ILHelpers.ilproj">
       <Aliases>ilhelpers</Aliases>
-      <PrivateAssets>all</PrivateAssets>
     </ProjectReference>
   </ItemGroup>
 

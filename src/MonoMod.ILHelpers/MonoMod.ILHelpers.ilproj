@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.IL">
-  <!-- LMAO this doesn't actually need anything, everything it needs is in tools/Common.IL.{props,targets} -->
 
   <PropertyGroup>
     <Descripton># DO NOT REFERENCE THIS PACKAGE DIRECTLY! Reference MonoMod.Backports instead.</Descripton>
@@ -10,7 +9,7 @@
     <VersionPrefix>1.1.0</VersionPrefix>
     <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion>
   </PropertyGroup>
-
+  
   <!-- Manually add Backports reference to NuGetizer set -->
   <Target Name="AddBackportsReference" BeforeTargets="GetPackageContents">
     <MSBuild Projects="$(MMSourcePath)MonoMod.Backports\MonoMod.Backports.csproj"
@@ -26,6 +25,14 @@
     
     <ItemGroup>
       <PackageFile Include="$(BackportsPackageId)" Version="$(BackportsVersion)" PackFolder="Dependency" />
+    </ItemGroup>
+  </Target>
+  
+  <!-- ApiCompat properly resolve backports -->
+  <Target Name="AddBackportsRefForNonBuildingPack" BeforeTargets="AssignProjectConfiguration"
+          Condition="'$(BuildProjectReferences)' == 'false' and '$(_IsPacking)' == 'true'">
+    <ItemGroup>
+      <ProjectReference Include="$(MMSourcePath)MonoMod.Backports\MonoMod.Backports.csproj" />
     </ItemGroup>
   </Target>
   

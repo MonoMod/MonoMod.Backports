@@ -4,41 +4,8 @@
   <Suppression>
     <DiagnosticId>CP0001</DiagnosticId>
     <Target>T:System.Runtime.CompilerServices.Unsafe</Target>
-    <Left>lib/net35/MonoMod.ILHelpers.dll</Left>
-    <Right>lib/net35/MonoMod.ILHelpers.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0001</DiagnosticId>
-    <Target>T:System.Runtime.CompilerServices.Unsafe</Target>
-    <Left>lib/net452/MonoMod.ILHelpers.dll</Left>
-    <Right>lib/net452/MonoMod.ILHelpers.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0001</DiagnosticId>
-    <Target>T:System.Runtime.CompilerServices.Unsafe</Target>
     <Left>lib/net5.0/MonoMod.ILHelpers.dll</Left>
     <Right>lib/net6.0/MonoMod.ILHelpers.dll</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0001</DiagnosticId>
-    <Target>T:MonoMod.Backports.ILHelpers.UnsafeRaw</Target>
-    <Left>lib/netstandard2.0/MonoMod.ILHelpers.dll</Left>
-    <Right>lib/netcoreapp2.1/MonoMod.ILHelpers.dll</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0001</DiagnosticId>
-    <Target>T:System.Runtime.CompilerServices.Unsafe</Target>
-    <Left>lib/netstandard2.0/MonoMod.ILHelpers.dll</Left>
-    <Right>lib/netstandard2.0/MonoMod.ILHelpers.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0001</DiagnosticId>
-    <Target>T:MonoMod.Backports.ILHelpers.UnsafeRaw</Target>
-    <Left>lib/netstandard2.0/MonoMod.ILHelpers.dll</Left>
-    <Right>lib/netstandard2.1/MonoMod.ILHelpers.dll</Right>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
@@ -84,52 +51,6 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>left</Left>
-    <Right>lib/net35/MonoMod.ILHelpers.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>left</Left>
-    <Right>lib/net452/MonoMod.ILHelpers.dll</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>left</Left>
-    <Right>lib/net452/MonoMod.ILHelpers.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>left</Left>
-    <Right>lib/net5.0/MonoMod.ILHelpers.dll</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>left</Left>
-    <Right>lib/net5.0/MonoMod.ILHelpers.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>left</Left>
-    <Right>lib/net6.0/MonoMod.ILHelpers.dll</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>left</Left>
-    <Right>lib/net6.0/MonoMod.ILHelpers.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
     <Target>System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
     <Left>left</Left>
     <Right>lib/net6.0/MonoMod.ILHelpers.dll</Right>
@@ -140,74 +61,6 @@
     <Left>left</Left>
     <Right>lib/net6.0/MonoMod.ILHelpers.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>left</Left>
-    <Right>lib/net7.0/MonoMod.ILHelpers.dll</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>left</Left>
-    <Right>lib/net7.0/MonoMod.ILHelpers.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>left</Left>
-    <Right>lib/net8.0/MonoMod.ILHelpers.dll</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>left</Left>
-    <Right>lib/netcoreapp2.1/MonoMod.ILHelpers.dll</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>left</Left>
-    <Right>lib/netcoreapp3.0/MonoMod.ILHelpers.dll</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>left</Left>
-    <Right>lib/netcoreapp3.1/MonoMod.ILHelpers.dll</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>left</Left>
-    <Right>lib/netstandard2.0/MonoMod.ILHelpers.dll</Right>
-    <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>left</Left>
-    <Right>lib/netstandard2.1/MonoMod.ILHelpers.dll</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>lib/net35/MonoMod.ILHelpers.dll</Left>
-    <Right>right</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>lib/net5.0/MonoMod.ILHelpers.dll</Left>
-    <Right>right</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>lib/net6.0/MonoMod.ILHelpers.dll</Left>
-    <Right>right</Right>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP1002</DiagnosticId>
@@ -221,35 +74,5 @@
     <Left>lib/net6.0/MonoMod.ILHelpers.dll</Left>
     <Right>right</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>lib/net7.0/MonoMod.ILHelpers.dll</Left>
-    <Right>right</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>lib/netcoreapp2.1/MonoMod.ILHelpers.dll</Left>
-    <Right>right</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>lib/netcoreapp3.0/MonoMod.ILHelpers.dll</Left>
-    <Right>right</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>lib/netcoreapp3.1/MonoMod.ILHelpers.dll</Left>
-    <Right>right</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP1002</DiagnosticId>
-    <Target>MonoMod.Backports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</Target>
-    <Left>lib/netstandard2.0/MonoMod.ILHelpers.dll</Left>
-    <Right>right</Right>
   </Suppression>
 </Suppressions>

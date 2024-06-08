@@ -11,6 +11,7 @@
   </PropertyGroup>
   
   <!-- Manually add Backports reference to NuGetizer set -->
+  <!-- NuGet doesn't like cyclical references.
   <Target Name="AddBackportsReference" BeforeTargets="GetPackageContents">
     <MSBuild Projects="$(MMSourcePath)MonoMod.Backports\MonoMod.Backports.csproj"
              Targets="GetProperties"
@@ -27,10 +28,10 @@
       <PackageFile Include="$(BackportsPackageId)" Version="$(BackportsVersion)" PackFolder="Dependency" />
     </ItemGroup>
   </Target>
+  -->
   
   <!-- ApiCompat properly resolve backports -->
-  <Target Name="AddBackportsRefForNonBuildingPack" BeforeTargets="AssignProjectConfiguration"
-          Condition="'$(BuildProjectReferences)' == 'false' and '$(_IsPacking)' == 'true'">
+  <Target Name="AddBackportsRefForNonBuildingPack" BeforeTargets="AssignProjectConfiguration" Condition="'$(BuildProjectReferences)' == 'false' and '$(_IsPacking)' == 'true'">
     <ItemGroup>
       <ProjectReference Include="$(MMSourcePath)MonoMod.Backports\MonoMod.Backports.csproj" />
     </ItemGroup>

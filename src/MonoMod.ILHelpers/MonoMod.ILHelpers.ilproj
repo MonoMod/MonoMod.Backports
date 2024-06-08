@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.IL">
 
   <PropertyGroup>
-    <Descripton># DO NOT REFERENCE THIS PACKAGE DIRECTLY! Reference MonoMod.Backports instead.</Descripton>
+    <Descripton>DO NOT REFERENCE THIS PACKAGE DIRECTLY! Reference MonoMod.Backports instead.</Descripton>
     
     <!-- target frameworks are defined in Common.props -->
     <TargetFrameworks>$(BackportsTargetFrameworks)</TargetFrameworks>

@@ -19,7 +19,11 @@
 #ifdef NET6_0_OR_GREATER
 
 #ifdef NET6_0
-.assembly extern System.Runtime.CompilerServices.Unsafe { .ver CORE_ASSEMBLY_VERSION }
+.assembly extern System.Runtime.CompilerServices.Unsafe
+{
+    .publickeytoken = CORE_PUBKEY_TOKEN
+    .ver CORE_ASSEMBLY_VERSION
+}
 #endif
 
 .class extern forwarder System.Runtime.CompilerServices.Unsafe

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <!-- C#-specific targets -->
+  <PropertyGroup>
+    <NoWarn Condition="'$(IsPackable)' == 'false'">$(NoWarn);NG0101</NoWarn>
+  </PropertyGroup>
+  
+  <!-- Roslyn references -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="$(RoslynVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeStyle" Version="$(RoslynVersion)">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <CoreCompileDependsOn>
+      EnsureSupportedMSBuildVersion;
+      $(CoreCompileDependsOn);
+    </CoreCompileDependsOn>
+  </PropertyGroup>
+
+  <Target Name="EnsureSupportedMSBuildVersion"
+          BeforeTargets="CoreCompile"
+          Condition="'$(MSBuildRequiredVersion)' != ''">
+    <Error ContinueOnError="false" Text="MSBuild version is too old to build this project; currently $(MSBuildVersion), needs at least $(MSBuildRequiredVersion)"
+           Condition="$([MSBuild]::VersionLessThan('$(MSBuildVersion)', '$(MSBuildRequiredVersion)'))" />
+  </Target>
+  
+  <!-- Banned API Analyzer -->
+  <ItemGroup Condition="'$(MMBannedApis)' != 'false'">
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)BannedSymbols.txt" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <_TFMIdentifier>$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)'))</_TFMIdentifier>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(_TFMIdentifier)' == '.NETFramework'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+    
+  <PropertyGroup>
+    <CoreCompileDependsOn>$(CoreCompileDependsOn);_DisableAnalyzers</CoreCompileDependsOn>
+  </PropertyGroup>
+  
+  <Target Name="_DisableAnalyzers" DependsOnTargets="ResolveTargetingPackAssets" Inputs="@(RemoveAnalyzer)" Outputs="|%(Identity)|">
+    <PropertyGroup>
+      <_RemoveAnalyzer>%(RemoveAnalyzer.Identity)</_RemoveAnalyzer>
+    </PropertyGroup>
+    <ItemGroup>
+      <Analyzer Remove="$(_RemoveAnalyzer)"/>
+      <Analyzer Remove="@(Analyzer)" Condition="'%(Analyzer.Filename)' == '$(_RemoveAnalyzer)'"/>
+    </ItemGroup>
+  </Target>
+  
+</Project>

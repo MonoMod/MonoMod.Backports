@@ -3,12 +3,6 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
 
-    <MMReferenceILHelpers>false</MMReferenceILHelpers>
-    <MMIncludeUnsafeAlias>false</MMIncludeUnsafeAlias>
-
-    <MMReferenceUtils>false</MMReferenceUtils>
-    <MMReferenceBackports>false</MMReferenceBackports>
-    <MMSharedSourceFiles>false</MMSharedSourceFiles>
     <MMReferenceSourcePkgs>false</MMReferenceSourcePkgs>
 
     <Nullable>disable</Nullable>

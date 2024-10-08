@@ -4,7 +4,6 @@
     <Descripton>DO NOT REFERENCE THIS PACKAGE DIRECTLY! Reference MonoMod.Backports instead.</Descripton>
     
     <!-- target frameworks are defined in Common.props -->
-    <TargetFrameworks>$(BackportsTargetFrameworks)</TargetFrameworks>
 
     <VersionPrefix>1.1.0</VersionPrefix>
     <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion>

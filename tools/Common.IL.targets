@@ -14,7 +14,7 @@
     <PropertyGroup>
       <IncludePath>$([MSBuild]::NormalizeDirectory('$(IntermediateOutputPath)', 'version'))</IncludePath>
       <IncludePathTrimmed>$(IncludePath.TrimEnd('\'))</IncludePathTrimmed>
-      <IlasmFlags>$(IlasmFlags) -INCLUDE="$(IncludePathTrimmed)" -MDV=$(RuntimeMetadataVersion)</IlasmFlags>
+      <IlasmFlags>$(IlasmFlags) -INCLUDE="$(IncludePathTrimmed)" -MDV="$(RuntimeMetadataVersion)"</IlasmFlags>
       <VersionFilePath Condition="'$(VersionFilePath)' == ''">$([MSBuild]::NormalizePath('$(IncludePath)', 'version.h'))</VersionFilePath>
       <_AssemblyVersion>$(AssemblyVersion.Replace('.', ':'))</_AssemblyVersion>
       <_coreAssemblyName Condition="'%(ReferencePath.FileName)' == '$(CoreAssembly)'">%(ReferencePath.FusionName)</_coreAssemblyName>

@@ -3,7 +3,7 @@
 
   <!-- These properties are defaults for ALL project types. C#-specific things must go in Common.CS.props -->
   <PropertyGroup>
-    <Configurations>Debug;Release;DebugTrace;ReleaseTrace</Configurations>
+    <Configurations>Debug;Release</Configurations>
     <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
     <DebugType>portable</DebugType>
     <Deterministic>true</Deterministic>

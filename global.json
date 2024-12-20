@@ -2,10 +2,10 @@
   "sdk": {
     "allowPrerelease": true,
     "rollForward": "latestPatch",
-    "version": "9.0.100-rc.1.24452.12"
+    "version": "9.0.101"
   },
   "msbuild-sdks": {
     "Microsoft.Build.NoTargets": "3.7.56",
-    "Microsoft.NET.Sdk.IL": "8.0.0"
+    "Microsoft.NET.Sdk.IL": "9.0.0"
   }
 }

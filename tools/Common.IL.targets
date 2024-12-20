@@ -53,7 +53,6 @@
 #define CORE_PUBKEY_TOKEN "($(_coreAssemblyPublicKeyToken) )"
 @(_ExtraMacros,'%0A')
 #ifdef REFERENCE_CORE_ASSEMBLY
-// Metadata version: v4.0.30319
 .assembly extern CORE_ASSEMBLY
 {
   .publickeytoken = CORE_PUBKEY_TOKEN

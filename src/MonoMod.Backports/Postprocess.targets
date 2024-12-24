@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project>
+
+  <ItemGroup>
+    <!-- Reference patcher -->
+    <ProjectReference Include="$(MMSourcePath)Postprocess\Postprocess.csproj" 
+                      Reference="false" ReferenceOutputAssembly="false"
+                      OutputItemType="MMPostprocessor"
+                      Private="false" Pack="false"
+                      SetTargetFramework="TargetFramework=net9.0"
+                      SkipGetTargetFrameworkProperties="true" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <_PPOutputDir>$(IntermediateOutputPath)postprocess/</_PPOutputDir>
+    <_PPShimsDir>$(IntermediateOutputPath)shims/</_PPShimsDir>
+  </PropertyGroup>
+  
+  <Target Name="PostprocessAssembly"
+          Inputs="$(MSBuildAllProjects);@(MMPostprocessor);@(IntermediateAssembly)"
+          Outputs="@(IntermediateAssembly->'$(_PPOutputDir)%(Filename)%(Extension)')"
+          Condition="'$(dotnet-nugetize)' == ''"
+          AfterTargets="CoreCompile"
+          BeforeTargets="_TimeStampAfterCompile;AfterCompile">
+
+    <Delete Files="$(_PPOutputDir)*" Condition="Exists('$(_PPOutputDir)')" />
+    <Delete Files="$(_PPShimsDir)*" Condition="Exists('$(_PPShimsDir)')" />
+    <MakeDir Directories="$(_PPOutputDir)" Condition="!Exists('$(_PPOutputDir)')" />
+    <MakeDir Directories="$(_PPShimsDir)" Condition="!Exists('$(_PPShimsDir)')"  />
+
+    <PropertyGroup>
+      <_NativeExecutableExtension Condition="'$(_NativeExecutableExtension)' == '' and '$(OS)' == 'Windows_NT'">.exe</_NativeExecutableExtension>
+      <_PostprocessorBinary>%(MMPostprocessor.RelativeDir)%(FileName)$(_NativeExecutableExtension)</_PostprocessorBinary>
+      <_BackportsName>%(IntermediateAssembly.FileName)%(Extension)</_BackportsName>
+      <_BackportsPath>%(IntermediateAssembly.Identity)</_BackportsPath>
+      <_ILHelpersPath Condition="'%(ReferencePath.FileName)%(Extension)' == 'MonoMod.ILHelpers.dll'">%(Identity)</_ILHelpersPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_PPArguments Include="$(_PPOutputDir)$(_BackportsName)" /> <!-- 1: the output assembly name-->
+      <_PPArguments Include="$(_PPShimsDir)" /> <!-- 2: output shim directory -->
+      <_PPArguments Include="$(MMRootPath)snk" /> <!-- 3: snk directory -->
+      <_PPArguments Include="$(_BackportsPath)" /> <!-- 4: input backports path -->
+      <_PPArguments Include="$(_ILHelpersPath)" /> <!-- 5: input ILHelpers path -->
+      <!-- then the remaining shims... -->
+      <!-- TODO -->
+    </ItemGroup>
+    
+    <Exec Command="&quot;$(_PostprocessorBinary)&quot; @(_PPArguments->'&quot;%(Identity)&quot;',' ')">
+      <Output TaskParameter="ExitCode" PropertyName="_ExitCode" />
+    </Exec>
+
+    <ItemGroup>
+      <_PatchedFiles Include="$(_PPOutputDir)*.dll" />
+      <_PatchedFiles Include="$(_PPShimsDir)*" />
+      <FileWrites Include="@(_PatchedFiles)" />
+      
+      <IntermediateAssembly Remove="@(IntermediateAssembly)" />
+      <IntermediateAssembly Include="@(_PatchedFiles)" />
+      <_DebugSymbolsIntermediatePath Remove="@(_DebugSymbolsIntermediatePath)" />
+      <_DebugSymbolsIntermediatePath Include="$(_PPOutputDir)*.pdb" />
+      <DocFileItem Remove="@(DocFileItem)" />
+      <DocFileItem Include="$(_PPOutputDir)*.xml" />
+    </ItemGroup>
+
+    <Error Text="Postprocessor failed" Condition="'$(_ExitCode)' != '0'" />
+  </Target>
+
+</Project>

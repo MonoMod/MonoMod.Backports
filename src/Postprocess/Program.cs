@@ -19,6 +19,11 @@ if (args is not [
 {
     Console.Error.WriteLine("Assemblies not provided.");
     Console.Error.WriteLine("Syntax: <output dll> <output ref dir> <snk directory> <MonoMod.Backports.dll> <MonoMod.ILHelpers.dll> <...oob package assemblies...>");
+    Console.Error.WriteLine("Arguments provided: ");
+    foreach (var arg in args)
+    {
+        Console.Error.WriteLine($"- {arg}");
+    }
     return 1;
 }
 

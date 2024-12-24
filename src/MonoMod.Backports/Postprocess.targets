@@ -38,12 +38,8 @@
 
     <ItemGroup>
       <_PPArguments Include="$(_PPOutputDir)$(_BackportsName)" /> <!-- 1: the output assembly name-->
-      <_PPArguments Include="$(_PPShimsDir)" /> <!-- 2: output shim directory -->
-      <_PPArguments Include="$(MMRootPath)snk" /> <!-- 3: snk directory -->
-      <_PPArguments Include="$(_BackportsPath)" /> <!-- 4: input backports path -->
-      <_PPArguments Include="$(_ILHelpersPath)" /> <!-- 5: input ILHelpers path -->
-      <!-- then the remaining shims... -->
-      <!-- TODO -->
+      <_PPArguments Include="$(_BackportsPath)" /> <!-- 2: input backports path -->
+      <_PPArguments Include="$(_ILHelpersPath)" /> <!-- 3: input ILHelpers path -->
     </ItemGroup>
     
     <Exec Command="&quot;$(_PostprocessorBinary)&quot; @(_PPArguments->'&quot;%(Identity)&quot;',' ')">
@@ -52,7 +48,7 @@
 
     <ItemGroup>
       <_PatchedFiles Include="$(_PPOutputDir)*.dll" />
-      <_PatchedFiles Include="$(_PPShimsDir)*" />
+      <!--<_PatchedFiles Include="$(_PPShimsDir)*" />-->
       <FileWrites Include="@(_PatchedFiles)" />
       
       <IntermediateAssembly Remove="@(IntermediateAssembly)" />

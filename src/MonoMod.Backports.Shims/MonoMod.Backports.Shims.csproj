@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.Build.NoTargets">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <IsPackable>true</IsPackable>
+    <PackBuildOutput>false</PackBuildOutput>
+    <IsPackagingProject>true</IsPackagingProject>
+    <SkipCopyBuildProduct>false</SkipCopyBuildProduct>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Turn off default pack inference entirely -->
+    <PackInference Remove="@(PackInference)" />
+    <!-- The output package should reference the main Backports package -->
+    <ProjectReference Include="..\MonoMod.Backports\MonoMod.Backports.csproj" ReferenceOutputAssembly="false" Pack="true" />
+  </ItemGroup>
+  
+  <!-- Packages we're going to shim -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Bcl.HashCode" Version="6.0.0" Shim="true" />
+    <PackageReference Include="System.Memory" Version="4.6.0" Shim="true" />
+    <PackageReference Include="System.Buffers" Version="4.6.0" Shim="true" /> 
+  </ItemGroup>
+
+</Project>

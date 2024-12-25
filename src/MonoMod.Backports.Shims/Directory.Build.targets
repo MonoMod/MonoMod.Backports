@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project>
+
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
+
+  <ItemGroup>
+    <ProjectReference Include="$(MMSourcePath)ShimGen\ShimGen.csproj"
+                      Reference="false" ReferenceOutputAssembly="false"
+                      OutputItemType="MMShimGen"
+                      Private="false" Pack="false"
+                      SetTargetFramework="TargetFramework=net9.0"
+                      SkipGetTargetFrameworkProperties="true" />
+  </ItemGroup>
+
+  <ItemDefinitionGroup>
+    <PackageReference>
+      <Shim>false</Shim>
+    </PackageReference>
+  </ItemDefinitionGroup>
+
+  <PropertyGroup>
+    <_ShimsDir>$(IntermediateOutputPath)shims/</_ShimsDir>
+    <_OutputTfmsTxt>$(IntermediateOutputPath)tfms.txt</_OutputTfmsTxt>
+  </PropertyGroup>
+
+  <Target Name="_ConfigureShimmedPackageRefs" BeforeTargets="CollectPackageReferences">
+    <ItemGroup>
+      <PackageReference Update="@(PackageReference)" Condition="'%(Shim)' == 'true'">
+        <Pack>false</Pack>
+        <GeneratePathProperty>true</GeneratePathProperty>
+      </PackageReference>
+    </ItemGroup>
+  </Target>
+  
+  <Target Name="_GetShimmedPackages"
+          DependsOnTargets="_ConfigureShimmedPackageRefs">
+    <ItemGroup>
+      <_ShimmedPackages Include="@(PackageReference)" Condition="'%(Shim)' == 'true'">
+        <PkgProp>Pkg$([System.String]::Copy('%(Identity)').Replace('.','_'))</PkgProp>
+      </_ShimmedPackages>
+    </ItemGroup>
+    <ItemGroup>
+      <_ShimmedPackages>
+        <PkgPath>$(%(PkgProp))</PkgPath>
+      </_ShimmedPackages>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="BuildShims"
+          BeforeTargets="CoreCompile"
+          DependsOnTargets="$(CoreCompileDependsOn);_GetShimmedPackages"
+          Inputs="$(MSBuildAllProjects);@(MMShimGen)"
+          Outputs="$(_OutputTfmsTxt)"
+          Condition="'$(dotnet-nugetize)' == ''"
+          >
+
+    <Delete Files="$(_ShimsDir)*" Condition="Exists('$(_PPShimsDir)')" />
+    <MakeDir Directories="$(_ShimsDir)" Condition="!Exists('$(_PPShimsDir)')"  />
+
+    <PropertyGroup>
+      <_NativeExecutableExtension Condition="'$(_NativeExecutableExtension)' == '' and '$(OS)' == 'Windows_NT'">.exe</_NativeExecutableExtension>
+      <_ShimGenExe>%(MMShimGen.RelativeDir)%(FileName)$(_NativeExecutableExtension)</_ShimGenExe>
+      <_SnkDir>$(MMRootPath)snk/</_SnkDir>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_PPArguments Include="$(_ShimsDir)" /> <!-- 1: the output directory -->
+      <_PPArguments Include="$(_SnkDir)" /> <!-- 2: snk directory -->
+      <!-- 3: the paths to the packages to process -->
+      <_PPArguments Include="%(_ShimmedPackages.PkgPath)" />
+    </ItemGroup>
+
+    <Exec ConsoleToMsBuild="true" LogStandardErrorAsError="true"
+      Command="&quot;$(_ShimgenExe)&quot; @(_PPArguments->'&quot;%(Identity)&quot;',' ')">
+      <Output TaskParameter="ExitCode" PropertyName="_ExitCode" />
+      <Output TaskParameter="ConsoleOutput" ItemName="_ShimGenOutput" />
+    </Exec>
+
+    <ItemGroup>
+      <_PatchedFiles Include="$(_ShimsDir)*.dll" />
+      <!--<_PatchedFiles Include="$(_PPShimsDir)*" />-->
+      <FileWrites Include="@(_PatchedFiles)" />
+
+      <IntermediateAssembly Remove="@(IntermediateAssembly)" />
+      <IntermediateAssembly Include="@(_PatchedFiles)" />
+      <_DebugSymbolsIntermediatePath Remove="@(_DebugSymbolsIntermediatePath)" />
+      <_DebugSymbolsIntermediatePath Include="$(_PPOutputDir)*.pdb" />
+      <DocFileItem Remove="@(DocFileItem)" />
+      <DocFileItem Include="$(_PPOutputDir)*.xml" />
+    </ItemGroup>
+
+    <Error Text="ShimGen failed" Condition="'$(_ExitCode)' != '0'" />
+    
+    <!-- Locate the TFMs to generate in the package -->
+    <ItemGroup>
+      <_TfmDirs Include="$([System.String]::Copy('%(_ShimGenOutput.Identity)').Replace('tfm:', ''))"
+                Condition="$([System.String]::Copy('%(_ShimGenOutput.Identity)').StartsWith('tfm:'))" />
+    </ItemGroup>
+    
+    <!-- Then we'll write the target tfms to a file, which will later be read and use to construct the package -->
+    <WriteLinesToFile File="$(_OutputTfmsTxt)" Lines="@(_TfmDirs)" WriteOnlyWhenDifferent="false" Overwrite="true" />
+  </Target>
+
+</Project>

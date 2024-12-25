@@ -5,7 +5,7 @@ using AsmResolver.DotNet.Code.Native;
 
 namespace Postprocess;
 
-internal class VersionedMetadataDotnetDirectoryFactory(string version) : DotNetDirectoryFactory
+internal sealed class VersionedMetadataDotnetDirectoryFactory(string version) : DotNetDirectoryFactory
 {
     public override DotNetDirectoryBuildResult CreateDotNetDirectory(
         ModuleDefinition module, INativeSymbolsProvider symbolsProvider, IErrorListener errorListener)

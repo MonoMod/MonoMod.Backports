@@ -27,34 +27,31 @@ if (args is not [
 using var fileservice = new ByteArrayFileService();
 var listener = ThrowErrorListener.Instance;
 
-// load baseline assemblies
 var readerParams = new ModuleReaderParameters(fileservice)
 {
     PEReaderParameters = new(listener)
 };
-/*var (context, backportsImage, backportsModule) = LoadContextForRootModule(backportsPath, readerParams);
-var backportsResolver = (AssemblyResolverBase)context.AssemblyResolver;
-
-var peImageBuilder = new ManagedPEImageBuilder(
-    new VersionedMetadataDotnetDirectoryFactory(backportsImage.DotNetDirectory!.Metadata!.VersionString),
-    listener);*/
 
 _ = Directory.CreateDirectory(outputRefDir);
 
+// first pass: compute TFMs and collect list for each package
+var pkgList = dotnetOobPackagePaths
+    .Select(path
+        => (path, Directory.EnumerateDirectories(Path.Combine(path, "lib"))
+            .Select(path => (path, NuGetFramework.ParseFolder(Path.GetFileName(path))))
+            .ToArray()))
+    .ToArray();
+
 var fwReducer = new FrameworkReducer();
-var pkgMinTfms = new List<NuGetFramework>();
+var targetTfms = fwReducer.ReduceDownwards(pkgList
+    .SelectMany(t 
+        => t.Item2.Select(t => t.Item2)))
+    .ToArray();
 
 // Now, we have some work to do for shims. We want to check if there is an equivalent type to the shims
 // defined or exported from Backports, and rewrite a new shim forwarding to Backports as appropriate.
-foreach (var oobPackagePath in dotnetOobPackagePaths)
+foreach (var (oobPackagePath, tfms) in pkgList)
 {
-    var pkgLibDir = Path.Combine(oobPackagePath, "lib");
-    var subdirs = Directory.EnumerateDirectories(pkgLibDir)
-        .Select(path => (path, NuGetFramework.ParseFolder(Path.GetFileName(path))))
-        .ToArray();
-
-    pkgMinTfms.AddRange(fwReducer.ReduceDownwards(subdirs.Select(t => t.Item2)));
-
     var importedSet = new HashSet<string>();
 
     ManagedPEImageBuilder? peImageBuilder = null;
@@ -62,7 +59,7 @@ foreach (var oobPackagePath in dotnetOobPackagePaths)
     AssemblyDefinition? backportsShimAssembly = null;
     AssemblyReference? backportsReference = null;
 
-    foreach (var (subdir, framework) in subdirs
+    foreach (var (subdir, framework) in tfms
         .OrderBy(t => t.Item2, NuGetFrameworkSorter.Instance))
     {
         var bclShimPath = Directory.EnumerateFiles(subdir, "*.dll").FirstOrDefault();
@@ -76,8 +73,13 @@ foreach (var oobPackagePath in dotnetOobPackagePaths)
                 new VersionedMetadataDotnetDirectoryFactory(bclShim.DotNetDirectory!.Metadata!.VersionString),
                 listener);
 
+            var bcl = KnownCorLibs.FromRuntimeInfo(
+                DotNetRuntimeInfo.Parse(
+                    targetTfms.Single()
+                    .GetDotNetFrameworkName(DefaultFrameworkNameProvider.Instance)));
+
             // set up the new shim module
-            backportsShim = new ModuleDefinition(bclShim.Name, (AssemblyReference)bclShim.CorLibTypeFactory.CorLibScope)
+            backportsShim = new ModuleDefinition(bclShim.Name, bcl)
             {
 
             };
@@ -123,7 +125,7 @@ foreach (var oobPackagePath in dotnetOobPackagePaths)
 
     if (backportsShim is null || peImageBuilder is null || backportsShimAssembly is null)
     {
-        Console.Error.WriteLine($"No assemblies were found for package at {oobPackagePath}!");
+        Console.Error.WriteLine($"ShimGen : error : No assemblies were found for package at {oobPackagePath}!");
         continue;
     }
 
@@ -138,8 +140,7 @@ foreach (var oobPackagePath in dotnetOobPackagePaths)
         var keyPath = Path.Combine(snkPath, name + ".snk");
         if (!File.Exists(keyPath))
         {
-            Console.Error.WriteLine($"Cannot finalize strong-name for {newShimPath}!");
-            Console.Error.WriteLine($"    Requires SNK file for public key token {keyPath}.");
+            Console.Error.WriteLine($"ShimGen : warning : Missing SNK file for key {name} (for {backportsShim.Name})");
         }
         else
         {
@@ -151,10 +152,9 @@ foreach (var oobPackagePath in dotnetOobPackagePaths)
     }
 }
 
-var minTfms = fwReducer.ReduceDownwards(pkgMinTfms);
-foreach (var tfm in minTfms)
+foreach (var tfm in targetTfms)
 {
-    Console.WriteLine(tfm.GetShortFolderName());
+    Console.WriteLine("tfm:" + tfm.GetShortFolderName());
 }
 
 return 0;

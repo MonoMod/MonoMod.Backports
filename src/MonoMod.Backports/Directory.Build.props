@@ -3,10 +3,4 @@
 
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
-  <!-- OOB packages we generate forwarders for -->
-  <ItemGroup>
-    <PackageDownload Include="System.Buffers" Version="[4.6.0]" Forwarder="true" />
-    <PackageDownload Include="System.Memory" Version="[4.6.0]" Forwarder="true" />
-  </ItemGroup>
-  
 </Project>

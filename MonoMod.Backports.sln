@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Postprocess", "src\Postproc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShimGen", "src\ShimGen\ShimGen.csproj", "{9ACA800E-4C14-40E6-AEE9-E798DA9254A2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoMod.Backports.Shims", "src\MonoMod.Backports.Shims\MonoMod.Backports.Shims.csproj", "{4B9158E2-41D6-4C93-963D-9A655E7FDDE4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{9ACA800E-4C14-40E6-AEE9-E798DA9254A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9ACA800E-4C14-40E6-AEE9-E798DA9254A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9ACA800E-4C14-40E6-AEE9-E798DA9254A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B9158E2-41D6-4C93-963D-9A655E7FDDE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B9158E2-41D6-4C93-963D-9A655E7FDDE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B9158E2-41D6-4C93-963D-9A655E7FDDE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B9158E2-41D6-4C93-963D-9A655E7FDDE4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -75,5 +81,9 @@ Global
 		{9AC35DDB-BDCE-450F-A3FF-6A5FF21388B5} = {041FBA0D-9297-42B8-93B0-5552F0CC1116}
 		{298AB7A1-1E7A-4B4E-ACAE-6B51E69682AB} = {0072BE2A-3320-461F-BAAF-004F3D4A6DD7}
 		{9ACA800E-4C14-40E6-AEE9-E798DA9254A2} = {0072BE2A-3320-461F-BAAF-004F3D4A6DD7}
+		{4B9158E2-41D6-4C93-963D-9A655E7FDDE4} = {0072BE2A-3320-461F-BAAF-004F3D4A6DD7}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A64787DD-E7ED-4D5E-9ACF-37EA1555FE96}
 	EndGlobalSection
 EndGlobal

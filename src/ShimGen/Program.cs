@@ -2,17 +2,16 @@
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Builder;
 using AsmResolver.DotNet.Serialized;
-using AsmResolver.DotNet.Signatures;
 using AsmResolver.IO;
-using AsmResolver.PE;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using AsmResolver.PE.DotNet.StrongName;
+using NuGet.Frameworks;
 using Postprocess;
 
 if (args is not [
     var outputRefDir,
     var snkPath,
-    .. var dotnetShimAssemblyPaths
+    .. var dotnetOobPackagePaths
     ])
 {
     Console.Error.WriteLine("Assemblies not provided.");
@@ -42,87 +41,94 @@ var peImageBuilder = new ManagedPEImageBuilder(
 
 _ = Directory.CreateDirectory(outputRefDir);
 
+var fwReducer = new FrameworkReducer();
+var pkgMinTfms = new List<NuGetFramework>();
+
 // Now, we have some work to do for shims. We want to check if there is an equivalent type to the shims
 // defined or exported from Backports, and rewrite a new shim forwarding to Backports as appropriate.
-foreach (var shimPath in dotnetShimAssemblyPaths)
+foreach (var oobPackagePath in dotnetOobPackagePaths)
 {
-    var bclShim = ModuleDefinition.FromFile(shimPath, readerParams);
+    var pkgLibDir = Path.Combine(oobPackagePath, "lib");
+    var subdirs = Directory.EnumerateDirectories(pkgLibDir)
+        .Select(path => (path, NuGetFramework.ParseFolder(Path.GetFileName(path))))
+        .ToArray();
 
-    var peImageBuilder = new ManagedPEImageBuilder(
-        new VersionedMetadataDotnetDirectoryFactory(bclShim.DotNetDirectory!.Metadata!.VersionString),
-        listener);
+    pkgMinTfms.AddRange(fwReducer.ReduceDownwards(subdirs.Select(t => t.Item2)));
 
-    // set up the new shim module
-    var backportsShim = new ModuleDefinition(bclShim.Name, (AssemblyReference)bclShim.CorLibTypeFactory.CorLibScope)
+    var importedSet = new HashSet<string>();
+
+    ManagedPEImageBuilder? peImageBuilder = null;
+    ModuleDefinition? backportsShim = null;
+    AssemblyDefinition? backportsShimAssembly = null;
+    AssemblyReference? backportsReference = null;
+
+    foreach (var (subdir, framework) in subdirs
+        .OrderBy(t => t.Item2, NuGetFrameworkSorter.Instance))
     {
+        var bclShimPath = Directory.EnumerateFiles(subdir, "*.dll").FirstOrDefault();
+        if (bclShimPath is null) continue;
 
-    };
-    var backportsShimAssembly = new AssemblyDefinition(bclShim.Assembly!.Name,
-        new(bclShim.Assembly!.Version.Major, 9999, 9999, 9999))
-    {
-        Modules = { backportsShim },
-        HashAlgorithm = bclShim.Assembly!.HashAlgorithm,
-        PublicKey = bclShim.Assembly!.PublicKey,
-        HasPublicKey = bclShim.Assembly!.HasPublicKey,
-    };
+        var bclShim = ModuleDefinition.FromFile(bclShimPath, readerParams);
 
-    var backportsReference = 
-        new AssemblyReference("MonoMod.Backports", new(1,0,0,0))
-        .ImportWith(backportsShim.DefaultImporter);
-
-    // copy attributes
-    foreach (var backportsAttr in bclShim.Assembly!.CustomAttributes)
-    {
-        var caSig = new CustomAttributeSignature();
-
-        foreach (var arg in backportsAttr.Signature!.FixedArguments)
+        if (peImageBuilder is null || backportsShim is null || backportsShimAssembly is null || backportsReference is null)
         {
-            caSig.FixedArguments.Add(new(
-                backportsShim.DefaultImporter.ImportTypeSignature(arg.ArgumentType),
-                arg.Elements));
+            peImageBuilder = new ManagedPEImageBuilder(
+                new VersionedMetadataDotnetDirectoryFactory(bclShim.DotNetDirectory!.Metadata!.VersionString),
+                listener);
+
+            // set up the new shim module
+            backportsShim = new ModuleDefinition(bclShim.Name, (AssemblyReference)bclShim.CorLibTypeFactory.CorLibScope)
+            {
+
+            };
+            backportsShimAssembly = new AssemblyDefinition(bclShim.Assembly!.Name,
+                new(bclShim.Assembly!.Version.Major, 9999, 9999, 9999))
+            {
+                Modules = { backportsShim },
+                HashAlgorithm = bclShim.Assembly!.HashAlgorithm,
+                PublicKey = bclShim.Assembly!.PublicKey,
+                HasPublicKey = bclShim.Assembly!.HasPublicKey,
+            };
+
+            backportsReference =
+                new AssemblyReference("MonoMod.Backports", new(1, 0, 0, 0))
+                .ImportWith(backportsShim.DefaultImporter);
         }
-        foreach (var arg in backportsAttr.Signature!.NamedArguments)
+
+        // go through all public types, make sure they exist in the shim, and generate the forwarder
+        foreach (var type in bclShim.TopLevelTypes)
         {
-            caSig.NamedArguments.Add(new(
-                arg.MemberType,
-                arg.MemberName,
-                backportsShim.DefaultImporter.ImportTypeSignature(arg.ArgumentType),
-                new(
-                    backportsShim.DefaultImporter.ImportTypeSignature(arg.Argument.ArgumentType),
-                    arg.Argument.Elements)));
+            void ExportType(TypeDefinition type, bool nested)
+            {
+                if (!type.IsPublic) return;
+
+                if (importedSet.Add(type.FullName))
+                {
+                    // note: we don't do any validation here, because we'll invoke apicompat for that logic after generating everything
+                    backportsShim.ExportedTypes.Add(new ExportedType(backportsReference, type.Namespace, type.Name)
+                    {
+                        Attributes = nested ? 0 : TypeAttributes.Forwarder,
+                    });
+                }
+
+                foreach (var nestedType in type.NestedTypes)
+                {
+                    ExportType(nestedType, true);
+                }
+            }
+
+            ExportType(type, false);
         }
-
-        var ca = new CustomAttribute(
-            (ICustomAttributeType?)backportsShim.DefaultImporter.ImportMethodOrNull(backportsAttr.Constructor),
-            caSig);
-
-        backportsShimAssembly.CustomAttributes.Add(ca);
     }
 
-    // go through all public types, make sure they exist in the shim, and generate the forwarder
-    foreach (var type in bclShim.TopLevelTypes)
+    if (backportsShim is null || peImageBuilder is null || backportsShimAssembly is null)
     {
-        void ExportType(TypeDefinition type, bool nested)
-        {
-            if (!type.IsPublic) return;
-
-            // note: we don't do any validation here, because we'll invoke apicompat for that logic after generating everything
-            backportsShim.ExportedTypes.Add(new ExportedType(backportsReference, type.Namespace, type.Name)
-            {
-                Attributes = nested ? 0 : TypeAttributes.Forwarder,
-            });
-
-            foreach (var nestedType in type.NestedTypes)
-            {
-                ExportType(nestedType, true);
-            }
-        }
-
-        ExportType(type, false);
+        Console.Error.WriteLine($"No assemblies were found for package at {oobPackagePath}!");
+        continue;
     }
 
     // write out the resultant shim assembly
-    var newShimPath = Path.Combine(outputRefDir, Path.GetFileName(shimPath));
+    var newShimPath = Path.Combine(outputRefDir, backportsShim.Name!);
     backportsShim.Write(newShimPath, peImageBuilder);
 
     // then finalize the strong name as needed
@@ -143,6 +149,12 @@ foreach (var shimPath in dotnetShimAssemblyPaths)
             signer.SignImage(assemblyFs, backportsShimAssembly.HashAlgorithm);
         }
     }
+}
+
+var minTfms = fwReducer.ReduceDownwards(pkgMinTfms);
+foreach (var tfm in minTfms)
+{
+    Console.WriteLine(tfm.GetShortFolderName());
 }
 
 return 0;

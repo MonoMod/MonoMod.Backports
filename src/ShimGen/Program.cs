@@ -43,9 +43,21 @@ var pkgList = dotnetOobPackagePaths
     .ToArray();
 
 var fwReducer = new FrameworkReducer();
-var targetTfms = fwReducer.ReduceDownwards(pkgList
+var targetTfms = fwReducer.ReduceEquivalent(pkgList
     .SelectMany(t 
         => t.Item2.Select(t => t.Item2)))
+    .ToArray();
+
+var precSorter = new FrameworkPrecedenceSorter(DefaultFrameworkNameProvider.Instance, false);
+
+// targetTfms now contains only unique target frameworks; we need to further reduce that to only the minimum for each "kind" of tfm
+// this is necesasry because our final package will eventually have a dummy reference for the minimum supported
+// for each (particularly net35), but if we just pick the overall minimum (netstandard2.0), net35 would be preferred
+// for all .NET Framework targets, even the ones that support NS2.0.
+targetTfms = targetTfms
+    .GroupBy(tfm => tfm.Framework)
+    .SelectMany(g => fwReducer.ReduceDownwards(g))
+    .Order(precSorter)
     .ToArray();
 
 // Now, we have some work to do for shims. We want to check if there is an equivalent type to the shims
@@ -63,7 +75,7 @@ foreach (var (oobPackagePath, tfms) in pkgList)
         AssemblyReference? backportsReference = null;
 
         foreach (var (subdir, framework) in tfms
-            .OrderBy(t => t.Item2, NuGetFrameworkSorter.Instance))
+            .OrderBy(t => t.Item2, precSorter))
         {
             var bclShimPath = Directory.EnumerateFiles(subdir, "*.dll").FirstOrDefault();
             if (bclShimPath is null) continue;

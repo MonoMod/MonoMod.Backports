@@ -23,4 +23,20 @@
     </ItemGroup>
   </Target>
   
+  <!-- Fix NetCoreApp packageref -->
+  <ItemGroup>
+    <PackageReference Update="Microsoft.NETCore.App" FrameworkFile="true" />
+  </ItemGroup>
+
+  <Target Name="_FixNetCoreAppReferences"
+          BeforeTargets="_CollectPrimaryOutputDependencies"
+          AfterTargets="ReferenceCopyLocalPathsOutputGroup;RunResolvePackageDependencies">
+    <ItemGroup>
+      <ReferencePath Update="@(ReferencePath)"
+                                Condition="'%(NuGetPackageId)' == 'Microsoft.NETCore.App'">
+        <FrameworkFile>true</FrameworkFile>
+      </ReferencePath>
+    </ItemGroup>
+  </Target>
+  
 </Project>

@@ -29,6 +29,7 @@
       <Aliases>ilhelpers</Aliases>
       <CopyLocal>false</CopyLocal>
       <Private>false</Private>
+      <Pack>false</Pack>
     </ProjectReference>
   </ItemGroup>
 

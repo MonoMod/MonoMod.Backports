@@ -13,7 +13,6 @@
 
   <PropertyGroup>
     <_PPOutputDir>$(IntermediateOutputPath)postprocess/</_PPOutputDir>
-    <_PPShimsDir>$(IntermediateOutputPath)shims/</_PPShimsDir>
   </PropertyGroup>
   
   <Target Name="PostprocessAssembly"
@@ -24,9 +23,7 @@
           BeforeTargets="_TimeStampAfterCompile;AfterCompile">
 
     <Delete Files="$(_PPOutputDir)*" Condition="Exists('$(_PPOutputDir)')" />
-    <Delete Files="$(_PPShimsDir)*" Condition="Exists('$(_PPShimsDir)')" />
     <MakeDir Directories="$(_PPOutputDir)" Condition="!Exists('$(_PPOutputDir)')" />
-    <MakeDir Directories="$(_PPShimsDir)" Condition="!Exists('$(_PPShimsDir)')"  />
 
     <PropertyGroup>
       <_NativeExecutableExtension Condition="'$(_NativeExecutableExtension)' == '' and '$(OS)' == 'Windows_NT'">.exe</_NativeExecutableExtension>
@@ -48,7 +45,6 @@
 
     <ItemGroup>
       <_PatchedFiles Include="$(_PPOutputDir)*.dll" />
-      <!--<_PatchedFiles Include="$(_PPShimsDir)*" />-->
       <FileWrites Include="@(_PatchedFiles)" />
       
       <IntermediateAssembly Remove="@(IntermediateAssembly)" />

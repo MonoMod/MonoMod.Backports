@@ -77,16 +77,15 @@
     </Exec>
 
     <ItemGroup>
-      <_PatchedFiles Include="$(_ShimsDir)**/*.dll" />
-      <!--<_PatchedFiles Include="$(_PPShimsDir)*" />-->
-      <FileWrites Include="@(_PatchedFiles)" />
+      <_ShimFiles Include="$(_ShimsDir)**/*.dll" />
+      <FileWrites Include="@(_ShimFiles)" />
 
       <IntermediateAssembly Remove="@(IntermediateAssembly)" />
-      <IntermediateAssembly Include="@(_PatchedFiles)" />
+      <!--<IntermediateAssembly Include="@(_PatchedFiles)" />-->
       <_DebugSymbolsIntermediatePath Remove="@(_DebugSymbolsIntermediatePath)" />
-      <_DebugSymbolsIntermediatePath Include="$(_ShimsDir)**/*.pdb" />
+      <_ShimFiles Include="$(_ShimsDir)**/*.pdb" />
       <DocFileItem Remove="@(DocFileItem)" />
-      <DocFileItem Include="$(_ShimsDir)*.xml" />
+      <_ShimFiles Include="$(_ShimsDir)*.xml" />
     </ItemGroup>
 
     <Error Text="ShimGen failed" Condition="'$(_ExitCode)' != '0'" />
@@ -99,6 +98,14 @@
     
     <!-- Then we'll write the target tfms to a file, which will later be read and use to construct the package -->
     <WriteLinesToFile File="$(_OutputTfmsTxt)" Lines="@(_TfmDirs)" WriteOnlyWhenDifferent="false" Overwrite="true" />
+  </Target>
+
+  <Target Name="_CopyShimsToOutputRecursive"
+          DependsOnTargets="BuildShims"
+          BeforeTargets="CopyFilesToOutputDirectory"
+          Inputs="@(_ShimFiles)"
+          Outputs="@(_ShimFiles->'$(OutDir)%(RecursiveDir)%(Filename)%(Extension)'">
+    <Copy SourceFiles="@(_ShimFiles)" DestinationFolder="$(OutDir)%(RecursiveDir)" />
   </Target>
 
 </Project>

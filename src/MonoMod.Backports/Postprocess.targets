@@ -42,7 +42,7 @@
       <_PPArguments Include="$(_ILHelpersPath)" /> <!-- 3: input ILHelpers path -->
     </ItemGroup>
     
-    <Exec Command="&quot;$(_PostprocessorBinary)&quot; @(_PPArguments->'&quot;%(Identity)&quot;',' ')">
+    <Exec Command="&quot;$(_PostprocessorBinary)&quot; @(_PPArguments->'&quot;%(Identity)&quot;',' ')" LogStandardErrorAsError="true">
       <Output TaskParameter="ExitCode" PropertyName="_ExitCode" />
     </Exec>
 

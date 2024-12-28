@@ -14,8 +14,6 @@
   <ItemGroup>
     <!-- Turn off default pack inference entirely -->
     <PackInference Remove="@(PackInference)" />
-    <!-- The output package should reference the main Backports package -->
-    <ProjectReference Include="..\MonoMod.Backports\MonoMod.Backports.csproj" ReferenceOutputAssembly="false" Pack="true" />
   </ItemGroup>
   
   <!-- Packages we're going to shim -->

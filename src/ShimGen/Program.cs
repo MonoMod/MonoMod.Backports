@@ -50,104 +50,109 @@ var targetTfms = fwReducer.ReduceDownwards(pkgList
 
 // Now, we have some work to do for shims. We want to check if there is an equivalent type to the shims
 // defined or exported from Backports, and rewrite a new shim forwarding to Backports as appropriate.
+var importedSet = new HashSet<string>();
 foreach (var (oobPackagePath, tfms) in pkgList)
 {
-    var importedSet = new HashSet<string>();
-
-    ManagedPEImageBuilder? peImageBuilder = null;
-    ModuleDefinition? backportsShim = null;
-    AssemblyDefinition? backportsShimAssembly = null;
-    AssemblyReference? backportsReference = null;
-
-    foreach (var (subdir, framework) in tfms
-        .OrderBy(t => t.Item2, NuGetFrameworkSorter.Instance))
+    foreach (var targetTfm in targetTfms)
     {
-        var bclShimPath = Directory.EnumerateFiles(subdir, "*.dll").FirstOrDefault();
-        if (bclShimPath is null) continue;
+        importedSet.Clear();
 
-        var bclShim = ModuleDefinition.FromFile(bclShimPath, readerParams);
+        ManagedPEImageBuilder? peImageBuilder = null;
+        ModuleDefinition? backportsShim = null;
+        AssemblyDefinition? backportsShimAssembly = null;
+        AssemblyReference? backportsReference = null;
 
-        if (peImageBuilder is null || backportsShim is null || backportsShimAssembly is null || backportsReference is null)
+        foreach (var (subdir, framework) in tfms
+            .OrderBy(t => t.Item2, NuGetFrameworkSorter.Instance))
         {
-            peImageBuilder = new ManagedPEImageBuilder(
-                new VersionedMetadataDotnetDirectoryFactory(bclShim.DotNetDirectory!.Metadata!.VersionString),
-                listener);
+            var bclShimPath = Directory.EnumerateFiles(subdir, "*.dll").FirstOrDefault();
+            if (bclShimPath is null) continue;
 
-            var bcl = KnownCorLibs.FromRuntimeInfo(
-                DotNetRuntimeInfo.Parse(
-                    targetTfms.Single()
-                    .GetDotNetFrameworkName(DefaultFrameworkNameProvider.Instance)));
+            var bclShim = ModuleDefinition.FromFile(bclShimPath, readerParams);
 
-            // set up the new shim module
-            backportsShim = new ModuleDefinition(bclShim.Name, bcl)
+            if (peImageBuilder is null || backportsShim is null || backportsShimAssembly is null || backportsReference is null)
             {
+                peImageBuilder = new ManagedPEImageBuilder(
+                    new VersionedMetadataDotnetDirectoryFactory(bclShim.DotNetDirectory!.Metadata!.VersionString),
+                    listener);
 
-            };
-            backportsShimAssembly = new AssemblyDefinition(bclShim.Assembly!.Name,
-                new(bclShim.Assembly!.Version.Major, 9999, 9999, 9999))
-            {
-                Modules = { backportsShim },
-                HashAlgorithm = bclShim.Assembly!.HashAlgorithm,
-                PublicKey = bclShim.Assembly!.PublicKey,
-                HasPublicKey = bclShim.Assembly!.HasPublicKey,
-            };
+                var bcl = KnownCorLibs.FromRuntimeInfo(
+                    DotNetRuntimeInfo.Parse(
+                        targetTfm.GetDotNetFrameworkName(DefaultFrameworkNameProvider.Instance)));
 
-            backportsReference =
-                new AssemblyReference("MonoMod.Backports", new(1, 0, 0, 0))
-                .ImportWith(backportsShim.DefaultImporter);
-        }
-
-        // go through all public types, make sure they exist in the shim, and generate the forwarder
-        foreach (var type in bclShim.TopLevelTypes)
-        {
-            void ExportType(TypeDefinition type, bool nested)
-            {
-                if (!type.IsPublic) return;
-
-                if (importedSet.Add(type.FullName))
+                // set up the new shim module
+                backportsShim = new ModuleDefinition(bclShim.Name, bcl)
                 {
-                    // note: we don't do any validation here, because we'll invoke apicompat for that logic after generating everything
-                    backportsShim.ExportedTypes.Add(new ExportedType(backportsReference, type.Namespace, type.Name)
-                    {
-                        Attributes = nested ? 0 : TypeAttributes.Forwarder,
-                    });
-                }
 
-                foreach (var nestedType in type.NestedTypes)
+                };
+                backportsShimAssembly = new AssemblyDefinition(bclShim.Assembly!.Name,
+                    new(bclShim.Assembly!.Version.Major, 9999, 9999, 9999))
                 {
-                    ExportType(nestedType, true);
-                }
+                    Modules = { backportsShim },
+                    HashAlgorithm = bclShim.Assembly!.HashAlgorithm,
+                    PublicKey = bclShim.Assembly!.PublicKey,
+                    HasPublicKey = bclShim.Assembly!.HasPublicKey,
+                };
+
+                backportsReference =
+                    new AssemblyReference("MonoMod.Backports", new(1, 0, 0, 0))
+                    .ImportWith(backportsShim.DefaultImporter);
             }
 
-            ExportType(type, false);
+            // go through all public types, make sure they exist in the shim, and generate the forwarder
+            foreach (var type in bclShim.TopLevelTypes)
+            {
+                void ExportType(TypeDefinition type, bool nested)
+                {
+                    if (!type.IsPublic) return;
+
+                    if (importedSet.Add(type.FullName))
+                    {
+                        // note: we don't do any validation here, because we'll invoke apicompat for that logic after generating everything
+                        backportsShim.ExportedTypes.Add(new ExportedType(backportsReference, type.Namespace, type.Name)
+                        {
+                            Attributes = nested ? 0 : TypeAttributes.Forwarder,
+                        });
+                    }
+
+                    foreach (var nestedType in type.NestedTypes)
+                    {
+                        ExportType(nestedType, true);
+                    }
+                }
+
+                ExportType(type, false);
+            }
         }
-    }
 
-    if (backportsShim is null || peImageBuilder is null || backportsShimAssembly is null)
-    {
-        Console.Error.WriteLine($"ShimGen : error : No assemblies were found for package at {oobPackagePath}!");
-        continue;
-    }
-
-    // write out the resultant shim assembly
-    var newShimPath = Path.Combine(outputRefDir, backportsShim.Name!);
-    backportsShim.Write(newShimPath, peImageBuilder);
-
-    // then finalize the strong name as needed
-    if (backportsShimAssembly.HasPublicKey)
-    {
-        var name = Convert.ToHexString(backportsShimAssembly.GetPublicKeyToken()!);
-        var keyPath = Path.Combine(snkPath, name + ".snk");
-        if (!File.Exists(keyPath))
+        if (backportsShim is null || peImageBuilder is null || backportsShimAssembly is null)
         {
-            Console.Error.WriteLine($"ShimGen : warning : Missing SNK file for key {name} (for {backportsShim.Name})");
+            Console.Error.WriteLine($"ShimGen : error : No assemblies were found for package at {oobPackagePath}!");
+            continue;
         }
-        else
+
+        // write out the resultant shim assembly
+        var newShimFolder = Path.Combine(outputRefDir, targetTfm.GetShortFolderName());
+        Directory.CreateDirectory(newShimFolder);
+        var newShimPath = Path.Combine(newShimFolder, backportsShim.Name!);
+        backportsShim.Write(newShimPath, peImageBuilder);
+
+        // then finalize the strong name as needed
+        if (backportsShimAssembly.HasPublicKey)
         {
-            var snk = StrongNamePrivateKey.FromFile(keyPath);
-            var signer = new StrongNameSigner(snk);
-            using var assemblyFs = File.Open(newShimPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-            signer.SignImage(assemblyFs, backportsShimAssembly.HashAlgorithm);
+            var name = Convert.ToHexString(backportsShimAssembly.GetPublicKeyToken()!);
+            var keyPath = Path.Combine(snkPath, name + ".snk");
+            if (!File.Exists(keyPath))
+            {
+                Console.Error.WriteLine($"ShimGen : warning : Missing SNK file for key {name} (for {backportsShim.Name})");
+            }
+            else
+            {
+                var snk = StrongNamePrivateKey.FromFile(keyPath);
+                var signer = new StrongNameSigner(snk);
+                using var assemblyFs = File.Open(newShimPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+                signer.SignImage(assemblyFs, backportsShimAssembly.HashAlgorithm);
+            }
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.Build.NoTargets">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <PackBuildOutput>false</PackBuildOutput>
     <IsPackagingProject>true</IsPackagingProject>

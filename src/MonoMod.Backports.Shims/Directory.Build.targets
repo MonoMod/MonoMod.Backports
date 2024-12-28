@@ -54,7 +54,7 @@
           Condition="'$(dotnet-nugetize)' == ''"
           >
 
-    <Delete Files="$(_ShimsDir)*" Condition="Exists('$(_PPShimsDir)')" />
+    <Delete Files="$(_ShimsDir)**/*" Condition="Exists('$(_PPShimsDir)')" />
     <MakeDir Directories="$(_ShimsDir)" Condition="!Exists('$(_PPShimsDir)')"  />
 
     <PropertyGroup>
@@ -77,16 +77,16 @@
     </Exec>
 
     <ItemGroup>
-      <_PatchedFiles Include="$(_ShimsDir)*.dll" />
+      <_PatchedFiles Include="$(_ShimsDir)**/*.dll" />
       <!--<_PatchedFiles Include="$(_PPShimsDir)*" />-->
       <FileWrites Include="@(_PatchedFiles)" />
 
       <IntermediateAssembly Remove="@(IntermediateAssembly)" />
       <IntermediateAssembly Include="@(_PatchedFiles)" />
       <_DebugSymbolsIntermediatePath Remove="@(_DebugSymbolsIntermediatePath)" />
-      <_DebugSymbolsIntermediatePath Include="$(_PPOutputDir)*.pdb" />
+      <_DebugSymbolsIntermediatePath Include="$(_ShimsDir)**/*.pdb" />
       <DocFileItem Remove="@(DocFileItem)" />
-      <DocFileItem Include="$(_PPOutputDir)*.xml" />
+      <DocFileItem Include="$(_ShimsDir)*.xml" />
     </ItemGroup>
 
     <Error Text="ShimGen failed" Condition="'$(_ExitCode)' != '0'" />

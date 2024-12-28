@@ -23,9 +23,11 @@
     <_OutputTfmsTxt>$(IntermediateOutputPath)tfms.txt</_OutputTfmsTxt>
   </PropertyGroup>
 
-  <Target Name="_ConfigureShimmedPackageRefs" BeforeTargets="CollectPackageReferences">
+  <Target Name="_ConfigureShimmedPackageRefs"
+          BeforeTargets="CollectPackageReferences">
     <ItemGroup>
       <PackageReference Update="@(PackageReference)" Condition="'%(Shim)' == 'true'">
+        <PrivateAssets>none</PrivateAssets>
         <Pack>false</Pack>
         <GeneratePathProperty>true</GeneratePathProperty>
       </PackageReference>
@@ -48,7 +50,7 @@
 
   <Target Name="BuildShims"
           BeforeTargets="CoreCompile"
-          DependsOnTargets="$(CoreCompileDependsOn);_GetShimmedPackages"
+          DependsOnTargets="$(CoreCompileDependsOn);_GetShimmedPackages;ResolveProjectReferences"
           Inputs="$(MSBuildAllProjects);@(MMShimGen)"
           Outputs="$(_OutputTfmsTxt)"
           Condition="'$(dotnet-nugetize)' == ''"
@@ -106,6 +108,37 @@
           Inputs="@(_ShimFiles)"
           Outputs="@(_ShimFiles->'$(OutDir)%(RecursiveDir)%(Filename)%(Extension)'">
     <Copy SourceFiles="@(_ShimFiles)" DestinationFolder="$(OutDir)%(RecursiveDir)" />
+  </Target>
+  
+  <!-- Packaging stuff -->
+  
+  <Target Name="_SetUpShimPackagePaths"
+          DependsOnTargets="BuildShims">
+
+    <ItemGroup>
+      <PackageFile Include="%(_ShimFiles.Identity)"
+                   TargetFramework="$([System.IO.Path]::GetFileName($([System.IO.Path]::GetDirectoryName('%(_ShimFiles.RecursiveDir)'))))"
+                   PackFolder="lib" />
+    </ItemGroup>
+
+    <!-- Make sure all output TFMs have a dummy  -->
+    <ItemGroup>
+      <_PackageMinTfms Include="$(PackageMinTfms)" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_TfmsWithFiles>@(PackageFile->'%(TargetFramework)')</_TfmsWithFiles>
+    </PropertyGroup>
+
+    <MakeDir Directories="@(_PackageMinTfms->'$(IntermediateOutputPath)%(Identity)')" ContinueOnError="true" />
+    <WriteLinesToFile File="$(IntermediateOutputPath)%(_PackageMinTfms.Identity)\_._" Overwrite="true" ContinueOnError="true" />
+    
+    <ItemGroup>
+      <PackageFile Include="$(IntermediateOutputPath)%(_PackageMinTfms.Identity)\_._"
+                   TargetFramework="%(_PackageMinTfms.Identity)"
+                   PackFolder="lib"
+                   Condition="!$([System.String]::Copy('$(_TfmsWithFiles)').Contains('%(_PackageMinTfms.Identity)'))" />
+    </ItemGroup>
+
   </Target>
 
 </Project>

@@ -16,6 +16,5 @@
     <Project Path="src/MonoMod.ILHelpers/MonoMod.ILHelpers.ilproj" Type="C#" />
     <Project Path="src/Postprocess/Postprocess.csproj" />
     <Project Path="src/ShimGen/ShimGen.csproj" />
-    <Project Path="src/testframeworkres/testframeworkres.csproj" />
   </Folder>
 </Solution>

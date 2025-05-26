@@ -140,5 +140,71 @@
     </ItemGroup>
 
   </Target>
+  
+  <!-- ApiCompat fixes -->
+
+  <PropertyGroup>
+    <_DummyRestoreProjectDir>$(IntermediateOutputPath)dummy/</_DummyRestoreProjectDir>
+    <_DummyRestoreProjectPath>$(_DummyRestoreProjectDir)dummy.csproj</_DummyRestoreProjectPath>
+    <_DummyRestoreProjectTemplate>
+      <Project Sdk="Microsoft.NET.Sdk">
+        <PropertyGroup>
+          <TargetFrameworks>{{TFMS}}</TargetFrameworks>
+          <EnableDefaultItems>false</EnableDefaultItems>
+          <CheckEolTargetFramework>false</CheckEolTargetFramework>
+          <NuGetAudit>false</NuGetAudit>
+        </PropertyGroup>
+        <ItemGroup>
+          <ProjectReference Include="$(MSBuildThisFileDirectory)../MonoMod.Backports/MonoMod.Backports.csproj" />
+        </ItemGroup>
+      </Project>
+    </_DummyRestoreProjectTemplate>
+  </PropertyGroup>
+  
+  <Target Name="_FixReferencePathForValidate"
+          AfterTargets="_GetReferencePathFromInnerProjects">
+    <ItemGroup>
+      <!-- The normally resolved reference path is WRONG, because it's based on the declared TargetFrameworks -->
+      <PackageValidationReferencePath Remove="@(PackageValidationReferencePath)" />
+    </ItemGroup>
+    
+    <!-- Ask Backports for the list of TFMs to test against -->
+    <MSBuild Projects="$(MSBuildThisFileDirectory)../MonoMod.Backports/MonoMod.Backports.csproj"
+             Targets="GetProperties"
+             Properties="PropertyNames=TargetFrameworks;BuildProjectReferences=false">
+      <Output ItemName="_BackportsProps" TaskParameter="TargetOutputs" />
+    </MSBuild>
+
+    <PropertyGroup>
+      <_BackportsTfms>@(_BackportsProps->'%(Value)')</_BackportsTfms>
+    </PropertyGroup>
+    <ItemGroup>
+      <_BackportsTfms1 Include="$(_BackportsTfms)" />
+      <_BackportsTfms1 Include="$(_TfmsWithFiles)" />
+      <_BackportsTfms Include="@(_BackportsTfms1->Distinct())" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_BackportsTfms>@(_BackportsTfms)</_BackportsTfms>
+    </PropertyGroup>
+    
+    <!-- Generate and restore dummy project -->
+    <Delete Files="$(_DummyRestoreProjectDir)**/*" Condition="Exists('$(_DummyRestoreProjectDir)')" />
+    <MakeDir Directories="$(_DummyRestoreProjectDir)" />
+    <!-- Make sure it doesn't inherit parent dir.build.* -->
+    <WriteLinesToFile Lines="&lt;Project&gt;&lt;/Project&gt;" File="$(_DummyRestoreProjectDir)Directory.Build.props" Overwrite="true" />
+    <WriteLinesToFile Lines="&lt;Project&gt;&lt;/Project&gt;" File="$(_DummyRestoreProjectDir)Directory.Build.targets" Overwrite="true" />
+    <WriteLinesToFile Lines="$(_DummyRestoreProjectTemplate.Replace('{{TFMS}}', '$(_BackportsTfms)'))" File="$(_DummyRestoreProjectPath)" Overwrite="true" />
+
+    <!-- Run a restore -->
+    <MSBuild Projects="$(_DummyRestoreProjectPath)" Targets="Restore" />
+    
+    <!-- Then get reference path -->
+    <MSBuild Projects="$(_DummyRestoreProjectPath)"
+             Targets="GetReferencesForApiCompatValidatePackage"
+             Properties="TargetFramework=%(_BackportsTfms.Identity);
+                         BuildProjectReferences=false">
+      <Output ItemName="PackageValidationReferencePath" TaskParameter="TargetOutputs" />
+    </MSBuild>
+  </Target>
 
 </Project>

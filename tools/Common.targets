@@ -32,8 +32,7 @@
           BeforeTargets="_CollectPrimaryOutputDependencies"
           AfterTargets="ReferenceCopyLocalPathsOutputGroup;RunResolvePackageDependencies">
     <ItemGroup>
-      <ReferencePath Update="@(ReferencePath)"
-                                Condition="'%(NuGetPackageId)' == 'Microsoft.NETCore.App'">
+      <ReferencePath Update="@(ReferencePath)" Condition="'%(NuGetPackageId)' == 'Microsoft.NETCore.App'">
         <FrameworkFile>true</FrameworkFile>
       </ReferencePath>
     </ItemGroup>

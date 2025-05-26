@@ -3,6 +3,7 @@
 
   <PropertyGroup>
     <GetPackageContentsDependsOn>$(GetPackageContentsDependsOn);_SetUpShimPackagePaths</GetPackageContentsDependsOn>
+    <RunPackageValidationDependsOn>$(RunPackageValidationDependsOn);_FixReferencePathForValidate</RunPackageValidationDependsOn>
   </PropertyGroup>
 
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />

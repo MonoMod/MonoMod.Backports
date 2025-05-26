@@ -1,0 +1,21 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.rsp" />
+    <File Path="Directory.Build.targets" />
+    <File Path="global.json" />
+    <File Path="LICENSE" />
+    <File Path="nuget.config" />
+    <Project Path=".github/.github.csproj" />
+    <Project Path="tools/tools.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/MonoMod.Backports.Shims/MonoMod.Backports.Shims.csproj" />
+    <Project Path="src/MonoMod.Backports.Tasks/MonoMod.Backports.Tasks.csproj" />
+    <Project Path="src/MonoMod.Backports/MonoMod.Backports.csproj" />
+    <Project Path="src/MonoMod.ILHelpers/MonoMod.ILHelpers.ilproj" Type="C#" />
+    <Project Path="src/Postprocess/Postprocess.csproj" />
+    <Project Path="src/ShimGen/ShimGen.csproj" />
+    <Project Path="src/testframeworkres/testframeworkres.csproj" />
+  </Folder>
+</Solution>

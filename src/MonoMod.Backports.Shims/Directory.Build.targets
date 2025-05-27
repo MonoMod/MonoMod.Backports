@@ -147,6 +147,44 @@
     </ItemGroup>
 
   </Target>
+
+  <Target Name="_BuildPackageConflictOverrides" DependsOnTargets="_GetShimmedPackages">
+    <PropertyGroup>
+      <_OverridePackages>@(_ShimmedPackages->'%(Identity)|%(Version)')</_OverridePackages>
+      <_ImportedPropOpen><![CDATA[<$(PackageId.Replace('.','_'))_Imported>]]></_ImportedPropOpen>
+      <_ImportedPropClose><![CDATA[</$(PackageId.Replace('.','_'))_Imported>]]></_ImportedPropClose>
+      <_BuildFileContent>
+        <Project>
+          <PropertyGroup>
+            $(_ImportedPropOpen)true$(_ImportedPropClose)
+          </PropertyGroup>
+          <ItemGroup Condition="'%24(DisableDefaultPackageConflictOverrides)' != 'true' and %24(DisableBackportsPackageConflictOverrides)' != 'true'">
+            <PackageConflictOverrides Include="$(PackageId)">
+              <OverriddenPackages>$(_OverridePackages)</OverriddenPackages>
+            </PackageConflictOverrides>
+          </ItemGroup>
+        </Project>
+      </_BuildFileContent>
+      <_BuildTransitiveContent>
+        <Project>
+          <Import Project="%24(MSBuildThisFileDirectory)../build/$(PackageId).targets" Condition="'%24($(PackageId.Replace('.','_'))_Imported)' != 'true'" />
+        </Project>
+      </_BuildTransitiveContent>
+      
+    </PropertyGroup>
+
+    <MakeDir Directories="$(IntermediateOutputPath)pkgBuild;$(IntermediateOutputPath)pkgBuildTransitive" />
+    <WriteLinesToFile File="$(IntermediateOutputPath)pkgBuild/$(PackageId).targets" Overwrite="true" Lines="$([MSBuild]::Escape('$(_BuildFileContent)'))" />
+    <WriteLinesToFile File="$(IntermediateOutputPath)pkgBuildTransitive/$(PackageId).targets" Overwrite="true" Lines="$([MSBuild]::Escape('$(_BuildTransitiveContent)'))" />
+
+    <ItemGroup>
+      <PackageFile Include="$(IntermediateOutputPath)pkgBuild/$(PackageId).targets"
+                   PackFolder="build" />
+      <PackageFile Include="$(IntermediateOutputPath)pkgBuildTransitive/$(PackageId).targets"
+                   PackFolder="buildTransitive" />
+    </ItemGroup>
+    
+  </Target>
   
   <!-- ApiCompat fixes -->
 

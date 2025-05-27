@@ -2,7 +2,7 @@
 <Project>
 
   <PropertyGroup>
-    <GetPackageContentsDependsOn>$(GetPackageContentsDependsOn);_SetUpShimPackagePaths</GetPackageContentsDependsOn>
+    <GetPackageContentsDependsOn>$(GetPackageContentsDependsOn);_SetUpShimPackagePaths;_BuildPackageConflictOverrides</GetPackageContentsDependsOn>
     <RunPackageValidationDependsOn>$(RunPackageValidationDependsOn);_FixReferencePathForValidate</RunPackageValidationDependsOn>
   </PropertyGroup>
 

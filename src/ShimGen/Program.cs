@@ -7,6 +7,7 @@ using AsmResolver.PE.DotNet.Metadata.Tables;
 using AsmResolver.PE.DotNet.StrongName;
 using NuGet.Frameworks;
 using Postprocess;
+using ShimGen;
 
 if (args is not [
     var outputRefDir,
@@ -36,36 +37,106 @@ _ = Directory.CreateDirectory(outputRefDir);
 
 // first pass: compute TFMs and collect list for each package
 var pkgList = dotnetOobPackagePaths
-    .Select(path
-        => (path, Directory.EnumerateDirectories(Path.Combine(path, "lib"))
-            .Select(path => (path, NuGetFramework.ParseFolder(Path.GetFileName(path))))
+    .Select(pkgPath
+        => (pkgPath, Directory.EnumerateDirectories(Path.Combine(pkgPath, "lib"))
+            .Select(libPath => (libPath, fwk: NuGetFramework.ParseFolder(Path.GetFileName(libPath)),
+                dlls: Directory.EnumerateFiles(libPath, "*.dll").Concat(Directory.EnumerateFiles(libPath, "_._")).ToArray()))
             .ToArray()))
     .ToArray();
 
 var fwReducer = new FrameworkReducer();
-var targetTfms = fwReducer.ReduceEquivalent(pkgList
-    .SelectMany(t 
-        => t.Item2.Select(t => t.Item2)))
-    .ToArray();
+
+// now, we want to collect each distinct set of input libs by tfm
+// We need to NOT generate a shim anytime the OOB lib doesn't exist (which happens because the lib exists in the BCL), but otherwise want to generate it whenever
+// there is a package version for it. So, we need to:
+//  - Collect all TFMs that each lib provides for
+//  - Consider each UNIQUE set of libs by tfm
+//  - For each UNIQUE set, reduce TFMs down to minimum of kind
+
+// first, arrange the lookups in a reasonable manner
+// pkgPath -> framework -> dllPaths
+var packageLayout = new Dictionary<string, Dictionary<NuGetFramework, List<(string dllPath, string dllName)>>>();
+var dllsByDllName = new Dictionary<string, List<string>>();
+foreach (var (pkgPath, libPath, framework, dllPath) in pkgList
+    .SelectMany(ta
+        => ta.Item2.SelectMany(tb
+            => tb.dlls.Select(dll => (ta.pkgPath, tb.libPath, tb.fwk, dll)))))
+{
+    if (!packageLayout.TryGetValue(pkgPath, out var fwDict))
+    {
+        packageLayout.Add(pkgPath, fwDict = new());
+    }
+
+    if (!fwDict.TryGetValue(framework, out var pathList))
+    {
+        fwDict.Add(framework, pathList = new());
+    }
+
+    var dllName = Path.GetFileName(dllPath);
+    if (dllName == "_._")
+    {
+        continue;
+    }
+
+    pathList.Add((dllPath, dllName));
+
+    if (!dllsByDllName.TryGetValue(dllName, out var dllPathList))
+    {
+        dllsByDllName.Add(dllName, dllPathList = new());
+    }
+
+    dllPathList.Add(dllPath);
+}
+
+// collect the list of ALL target frameworks that we might care about
+var targetTfms = fwReducer.ReduceEquivalent(packageLayout.Values.SelectMany(v => v.Keys)).ToArray();
+
+// then build up a mapping of the source files for all of those TFMs
+var frameworkGroupLayout = new Dictionary<NuGetFramework, List<string>>();
+foreach (var tfm in targetTfms)
+{
+    if (!frameworkGroupLayout.TryGetValue(tfm, out var list))
+    {
+        frameworkGroupLayout.Add(tfm, list = new());
+    }
+
+    foreach (var (pkgPath, pkgFwks) in packageLayout)
+    {
+        var bestTfm = fwReducer.GetNearest(tfm, pkgFwks.Keys);
+        if (bestTfm is not null)
+        {
+            foreach (var (_, dllName) in pkgFwks[bestTfm])
+            {
+                list.Add(dllName);
+            }
+        }
+    }
+
+    list.Sort();
+}
 
 var precSorter = new FrameworkPrecedenceSorter(DefaultFrameworkNameProvider.Instance, false);
 
-// targetTfms now contains only unique target frameworks; we need to further reduce that to only the minimum for each "kind" of tfm
+// now we group by unique sets, and pick only the minimial framework for each (of each type)
 // this is necesasry because our final package will eventually have a dummy reference for the minimum supported
 // for each (particularly net35), but if we just pick the overall minimum (netstandard2.0), net35 would be preferred
 // for all .NET Framework targets, even the ones that support NS2.0.
-targetTfms = targetTfms
-    .GroupBy(tfm => tfm.Framework)
-    .SelectMany(g => fwReducer.ReduceDownwards(g))
-    .Order(precSorter)
+var frameworkAssemblies = frameworkGroupLayout
+    .GroupBy(kvp => kvp.Value, SequenceEqualityComparer<string>.Instance)
+    .SelectMany(g =>
+        g.Select(kvp => kvp.Key)
+            .GroupBy(tfm => tfm.Framework)
+            .SelectMany(g => fwReducer.ReduceDownwards(g))
+            .Select(fwk => (fwk, g.Key)))
+    .OrderBy(t => t.fwk, precSorter)
     .ToArray();
 
 // Now, we have some work to do for shims. We want to check if there is an equivalent type to the shims
 // defined or exported from Backports, and rewrite a new shim forwarding to Backports as appropriate.
-var importedSet = new HashSet<string>();
-foreach (var (oobPackagePath, tfms) in pkgList)
+var importedSet = new Dictionary<string, ExportedType>();
+foreach (var (targetTfm, assemblies) in frameworkAssemblies)
 {
-    foreach (var targetTfm in targetTfms)
+    foreach (var dllName in assemblies)
     {
         importedSet.Clear();
 
@@ -74,12 +145,8 @@ foreach (var (oobPackagePath, tfms) in pkgList)
         AssemblyDefinition? backportsShimAssembly = null;
         AssemblyReference? backportsReference = null;
 
-        foreach (var (subdir, framework) in tfms
-            .OrderBy(t => t.Item2, precSorter))
+        foreach (var bclShimPath in dllsByDllName[dllName])
         {
-            var bclShimPath = Directory.EnumerateFiles(subdir, "*.dll").FirstOrDefault();
-            if (bclShimPath is null) continue;
-
             var bclShim = ModuleDefinition.FromFile(bclShimPath, readerParams);
 
             if (peImageBuilder is null || backportsShim is null || backportsShimAssembly is null || backportsReference is null)
@@ -114,32 +181,33 @@ foreach (var (oobPackagePath, tfms) in pkgList)
             // go through all public types, make sure they exist in the shim, and generate the forwarder
             foreach (var type in bclShim.TopLevelTypes)
             {
-                void ExportType(TypeDefinition type, bool nested)
+                void ExportType(TypeDefinition type, bool nested, IImplementation impl)
                 {
                     if (!type.IsPublic) return;
 
-                    if (importedSet.Add(type.FullName))
+                    if (!importedSet.TryGetValue(type.FullName, out var expType))
                     {
                         // note: we don't do any validation here, because we'll invoke apicompat for that logic after generating everything
-                        backportsShim.ExportedTypes.Add(new ExportedType(backportsReference, type.Namespace, type.Name)
+                        backportsShim.ExportedTypes.Add(expType = new ExportedType(impl, type.Namespace, type.Name)
                         {
                             Attributes = nested ? 0 : TypeAttributes.Forwarder,
                         });
+                        importedSet.Add(type.FullName, expType);
                     }
 
                     foreach (var nestedType in type.NestedTypes)
                     {
-                        ExportType(nestedType, true);
+                        ExportType(nestedType, true, expType);
                     }
                 }
 
-                ExportType(type, false);
+                ExportType(type, false, backportsReference);
             }
         }
 
         if (backportsShim is null || peImageBuilder is null || backportsShimAssembly is null)
         {
-            Console.Error.WriteLine($"ShimGen : error : No assemblies were found for package at {oobPackagePath}!");
+            Console.Error.WriteLine($"ShimGen : error : No assemblies were found for TFM {targetTfm} with name {dllName}!");
             continue;
         }
 
@@ -167,11 +235,8 @@ foreach (var (oobPackagePath, tfms) in pkgList)
             }
         }
     }
-}
 
-foreach (var tfm in targetTfms)
-{
-    Console.WriteLine("tfm:" + tfm.GetShortFolderName());
+    Console.WriteLine("tfm:" + targetTfm.GetShortFolderName());
 }
 
 return 0;

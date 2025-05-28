@@ -6,10 +6,7 @@
     <IsPackagingProject>true</IsPackagingProject>
     <SkipCopyBuildProduct>false</SkipCopyBuildProduct>
     <PackageMinTfms>net35;netstandard2.0;netcoreapp2.1</PackageMinTfms>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    
+    <EnablePackageValidation>false</EnablePackageValidation>
   </PropertyGroup>
 
   <ItemGroup>

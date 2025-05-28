@@ -11,9 +11,12 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/MonoMod.Backports.Shims/MonoMod.Backports.Shims.csproj" />
-    <Project Path="src/MonoMod.Backports.Tasks/MonoMod.Backports.Tasks.csproj" />
     <Project Path="src/MonoMod.Backports/MonoMod.Backports.csproj" />
     <Project Path="src/MonoMod.ILHelpers/MonoMod.ILHelpers.ilproj" Type="C#" />
+  </Folder>
+  <Folder Name="/src/build/">
+    <Project Path="src/GenApiCompatDll/GenApiCompatDll.csproj" Id="265b1234-55c4-4edd-996c-12ac77527224" />
+    <Project Path="src/MonoMod.Backports.Tasks/MonoMod.Backports.Tasks.csproj" />
     <Project Path="src/Postprocess/Postprocess.csproj" />
     <Project Path="src/ShimGen/ShimGen.csproj" />
   </Folder>

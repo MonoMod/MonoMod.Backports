@@ -35,9 +35,7 @@ var (context, backportsImage, backportsModule) = LoadContextForRootModule(backpo
 var backportsResolver = (AssemblyResolverBase)context.AssemblyResolver;
 var ilhelpersModule = LoadModuleInContext(context, ilhelpersPath);
 
-var peImageBuilder = new ManagedPEImageBuilder(
-    new VersionedMetadataDotnetDirectoryFactory(backportsImage.DotNetDirectory!.Metadata!.VersionString),
-    listener);
+var peImageBuilder = new ManagedPEImageBuilder(listener);
 
 // first, clone in ILHelpers
 var cloneResult = CloneModuleIntoModule(ilhelpersModule, backportsModule);

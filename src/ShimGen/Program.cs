@@ -6,7 +6,6 @@ using AsmResolver.IO;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using AsmResolver.PE.DotNet.StrongName;
 using NuGet.Frameworks;
-using Postprocess;
 using ShimGen;
 
 if (args is not [
@@ -32,6 +31,8 @@ var readerParams = new ModuleReaderParameters(fileservice)
 {
     PEReaderParameters = new(listener)
 };
+
+var peImageBuilder = new ManagedPEImageBuilder(listener);
 
 _ = Directory.CreateDirectory(outputRefDir);
 
@@ -140,7 +141,6 @@ foreach (var (targetTfm, assemblies) in frameworkAssemblies)
     {
         importedSet.Clear();
 
-        ManagedPEImageBuilder? peImageBuilder = null;
         ModuleDefinition? backportsShim = null;
         AssemblyDefinition? backportsShimAssembly = null;
         AssemblyReference? backportsReference = null;
@@ -151,10 +151,6 @@ foreach (var (targetTfm, assemblies) in frameworkAssemblies)
 
             if (peImageBuilder is null || backportsShim is null || backportsShimAssembly is null || backportsReference is null)
             {
-                peImageBuilder = new ManagedPEImageBuilder(
-                    new VersionedMetadataDotnetDirectoryFactory(bclShim.DotNetDirectory!.Metadata!.VersionString),
-                    listener);
-
                 var bcl = KnownCorLibs.FromRuntimeInfo(
                     DotNetRuntimeInfo.Parse(
                         targetTfm.GetDotNetFrameworkName(DefaultFrameworkNameProvider.Instance)));
@@ -162,7 +158,7 @@ foreach (var (targetTfm, assemblies) in frameworkAssemblies)
                 // set up the new shim module
                 backportsShim = new ModuleDefinition(bclShim.Name, bcl)
                 {
-
+                    RuntimeVersion = bclShim.RuntimeVersion
                 };
                 backportsShimAssembly = new AssemblyDefinition(bclShim.Assembly!.Name,
                     new(bclShim.Assembly!.Version.Major, 9999, 9999, 9999))

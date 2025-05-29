@@ -39,8 +39,6 @@ public static unsafe class UnsafeRaw
 #else
 // SRCS.Unsafe is defined here, so we want to define Unsafe
 
-using MonoMod.Backports;
-
 using ILImpl = ilhelpers::MonoMod.Backports.ILHelpers.UnsafeRaw;
 
 namespace System.Runtime.CompilerServices;

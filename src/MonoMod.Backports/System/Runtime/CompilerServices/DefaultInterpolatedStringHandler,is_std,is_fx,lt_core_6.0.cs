@@ -94,7 +94,7 @@ namespace System.Runtime.CompilerServices
         /// <summary>Derives a default length with which to seed the handler.</summary>
         /// <param name="literalLength">The number of constant characters outside of interpolation expressions in the interpolated string.</param>
         /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
-        [MethodImpl(MonoMod.Backports.MethodImplOptionsEx.AggressiveInlining)] // becomes a constant when inputs are constant
+        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)] // becomes a constant when inputs are constant
         internal static int GetDefaultLength(int literalLength, int formattedCount) =>
             Math.Max(MinimumArrayPoolLength, literalLength + (formattedCount * GuessedLengthPerHole));
 
@@ -118,7 +118,7 @@ namespace System.Runtime.CompilerServices
         }
 
         /// <summary>Clears the handler, returning any rented array to the pool.</summary>
-        [MethodImpl(MonoMod.Backports.MethodImplOptionsEx.AggressiveInlining)] // used only on a few hot paths
+        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)] // used only on a few hot paths
         internal void Clear()
         {
             char[]? toReturn = _arrayToReturnToPool;
@@ -134,7 +134,7 @@ namespace System.Runtime.CompilerServices
 
         /// <summary>Writes the specified string to the handler.</summary>
         /// <param name="value">The string to write.</param>
-        [MethodImpl(MonoMod.Backports.MethodImplOptionsEx.AggressiveInlining)]
+        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
         public void AppendLiteral(string value)
         {
             // AppendLiteral is expected to always be called by compiler-generated code with a literal string.
@@ -436,7 +436,7 @@ namespace System.Runtime.CompilerServices
         // implementations so that they don't get called by user code, making it incompatable with the real
         // BCL implementation
 
-        [MethodImpl(MonoMod.Backports.MethodImplOptionsEx.AggressiveInlining)]
+        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
         private void AppendFormatted(IntPtr value)
         {
             if (IntPtr.Size == 4)
@@ -448,7 +448,7 @@ namespace System.Runtime.CompilerServices
                 AppendFormatted((long)value);
             }
         }
-        [MethodImpl(MonoMod.Backports.MethodImplOptionsEx.AggressiveInlining)]
+        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
         private void AppendFormatted(IntPtr value, string? format)
         {
             if (IntPtr.Size == 4)
@@ -461,7 +461,7 @@ namespace System.Runtime.CompilerServices
             }
         }
 
-        [MethodImpl(MonoMod.Backports.MethodImplOptionsEx.AggressiveInlining)]
+        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
         private void AppendFormatted(UIntPtr value)
         {
             if (UIntPtr.Size == 4)
@@ -473,7 +473,7 @@ namespace System.Runtime.CompilerServices
                 AppendFormatted((ulong)value);
             }
         }
-        [MethodImpl(MonoMod.Backports.MethodImplOptionsEx.AggressiveInlining)]
+        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
         private void AppendFormatted(UIntPtr value, string? format)
         {
             if (UIntPtr.Size == 4)
@@ -608,7 +608,7 @@ namespace System.Runtime.CompilerServices
         #endregion
 
         /// <summary>Gets whether the provider provides a custom formatter.</summary>
-        [MethodImpl(MonoMod.Backports.MethodImplOptionsEx.AggressiveInlining)] // only used in a few hot path call sites
+        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)] // only used in a few hot path call sites
         internal static bool HasCustomFormatter(IFormatProvider provider)
         {
             Debug.Assert(provider is not null);
@@ -680,7 +680,7 @@ namespace System.Runtime.CompilerServices
         }
 
         /// <summary>Ensures <see cref="_chars"/> has the capacity to store <paramref name="additionalChars"/> beyond <see cref="_pos"/>.</summary>
-        [MethodImpl(MonoMod.Backports.MethodImplOptionsEx.AggressiveInlining)]
+        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
         private void EnsureCapacityForAdditionalChars(int additionalChars)
         {
             if (_chars.Length - _pos < additionalChars)
@@ -732,7 +732,7 @@ namespace System.Runtime.CompilerServices
         }
 
         /// <summary>Grow the size of <see cref="_chars"/> to at least the specified <paramref name="requiredMinCapacity"/>.</summary>
-        [MethodImpl(MonoMod.Backports.MethodImplOptionsEx.AggressiveInlining)] // but reuse this grow logic directly in both of the above grow routines
+        [MethodImpl(MethodImplOptionsEx.AggressiveInlining)] // but reuse this grow logic directly in both of the above grow routines
         private void GrowCore(uint requiredMinCapacity)
         {
             // We want the max of how much space we actually required and doubling our capacity (without going beyond the max allowed length). We

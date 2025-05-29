@@ -1,10 +1,10 @@
-﻿global using MethodImplOptions = MonoMod.Backports.MethodImplOptionsEx;
+﻿global using MethodImplOptions = System.Runtime.CompilerServices.MethodImplOptionsEx;
 using SysMethodImplOpts = System.Runtime.CompilerServices.MethodImplOptions;
 
 // TODO: maybe move this into System.Runtime.CompilerServices
 
-namespace MonoMod.Backports
-{
+namespace System.Runtime.CompilerServices
+{  
     public static class MethodImplOptionsEx
     {
         public const SysMethodImplOpts

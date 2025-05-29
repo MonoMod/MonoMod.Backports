@@ -7,6 +7,7 @@
     <File Path="LICENSE" />
     <File Path="nuget.config" />
     <Project Path=".github/.github.csproj" />
+    <Project Path="docs/docs.csproj" />
     <Project Path="tools/tools.csproj" />
   </Folder>
   <Folder Name="/src/">

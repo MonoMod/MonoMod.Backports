@@ -68,6 +68,10 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="_WaitForBackportsBuild">
+    <MSBuild Projects="$(MSBuildThisFileDirectory)../MonoMod.Backports/MonoMod.Backports.csproj" Targets="Build" />
+  </Target>
+
   <Target Name="_FixReferencePathForValidate" DependsOnTargets="_SetUpShimPackagePaths;_GetPackagesSupportedTfms">
 
     <!-- Ask Backports for the list of TFMs to test against -->
@@ -170,7 +174,7 @@
 
   <PropertyGroup>
     <_ApiCompatValidateAssembliesSemaphoreFile>$(IntermediateOutputPath)$(MSBuildThisFileName).apicompat.semaphore</_ApiCompatValidateAssembliesSemaphoreFile>
-    <ApiCompatValidateAssembliesDependsOn>CollectApiCompatInputs;$(ApiCompatValidateAssembliesDependsOn);_ApiCompatFinalizeInputs</ApiCompatValidateAssembliesDependsOn>
+    <ApiCompatValidateAssembliesDependsOn>CollectApiCompatInputs;$(ApiCompatValidateAssembliesDependsOn);_ApiCompatFinalizeInputs;_WaitForBackportsBuild</ApiCompatValidateAssembliesDependsOn>
   </PropertyGroup>
 
   <Target Name="DoApiCompatValidateAssembliesCore"

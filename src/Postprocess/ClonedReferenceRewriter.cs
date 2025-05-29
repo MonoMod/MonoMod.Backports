@@ -148,10 +148,7 @@ internal sealed class ClonedReferenceRewriter(MemberCloneResult cloneResult) : I
 
     private void Rewrite(CustomAttribute ca)
     {
-        if (ca.Constructor is { } && cloneResult.ContainsClonedMember(ca.Constructor))
-        {
-            ca.Constructor = cloneResult.GetClonedMember(ca.Constructor);
-        }
+        ca.Constructor = (ICustomAttributeType?)Rewrite(ca.Constructor);
 
         var sig = ca.Signature;
         if (sig is null) return;

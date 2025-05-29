@@ -98,23 +98,9 @@ static ModuleDefinition LoadModuleInContext(RuntimeContext context, string path)
 }
 static MemberCloneResult CloneModuleIntoModule(ModuleDefinition sourceModule, ModuleDefinition targetModule)
 {
-    var cloner = new MemberCloner(targetModule);
-    cloner.AddListener(new InjectTypeClonerListener(targetModule));
-
-    // clone all types
-    foreach (var type in sourceModule.TopLevelTypes)
-    {
-        if (type.IsModuleType) continue;
-
-        //if (new TypeReference(targetModule, targetModule, type.Namespace, type.Name).Resolve() is null)
-        {
-            cloner.Include(type, recursive: true);
-        }
-        /*else
-        {
-            Console.WriteLine($"Skipping type {type.Namespace}.{type.Name} because it already exists");
-        }*/
-    }
+    var cloner = new MemberCloner(targetModule,
+        importerFactory: ctx => new ClonedDuplicateReferenceImporter(targetModule, ctx),
+        clonerListener: new InjectTypeClonerListener(targetModule));
 
     // look at all of the source modules, and get ready to copy all of the forwarders that don't point into the target
     var exports = new List<ExportedType>();
@@ -134,6 +120,23 @@ static MemberCloneResult CloneModuleIntoModule(ModuleDefinition sourceModule, Mo
         {
             targetModule.ExportedTypes.RemoveAt(i);
             i--;
+        }
+    }
+
+    // clone all types
+    foreach (var type in sourceModule.TopLevelTypes)
+    {
+        if (type.IsModuleType) continue;
+
+        var existant = new TypeReference(targetModule, targetModule, type.Namespace, type.Name).Resolve();
+
+        if (existant is null)
+        {
+            cloner.Include(type, recursive: true);
+        }
+        else
+        {
+            Console.WriteLine($"Skipping type {type.Namespace}.{type.Name} because it already exists");
         }
     }
 

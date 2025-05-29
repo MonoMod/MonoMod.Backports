@@ -10,11 +10,12 @@ using System.Collections.Immutable;
 if (args is not [
     var outputRefDir,
     var tfmsFilePath,
+    var shimsDir,
     .. var dotnetOobPackagePaths
     ])
 {
     Console.Error.WriteLine("Assemblies not provided.");
-    Console.Error.WriteLine("Syntax: <output ref dir> <tfms file> <...oob package paths...>");
+    Console.Error.WriteLine("Syntax: <output ref dir> <tfms file> <shims dir> <...oob package paths...>");
     Console.Error.WriteLine("Arguments provided: ");
     foreach (var arg in args)
     {
@@ -38,6 +39,7 @@ _ = Directory.CreateDirectory(outputRefDir);
 var reducer = new FrameworkReducer();
 var precSorter = new FrameworkPrecedenceSorter(DefaultFrameworkNameProvider.Instance, false);
 
+// load packages dict
 var packages = dotnetOobPackagePaths
     .Select(pkgPath
         => (path: pkgPath, name: Path.GetFileName(Path.TrimEndingDirectorySeparator(Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(pkgPath))!)),
@@ -46,6 +48,16 @@ var packages = dotnetOobPackagePaths
                     files: Directory.GetFiles(libPath, "*.dll")))
                 .ToDictionary(t => t.fwk, t => t.files)))
     .ToDictionary(t => t.name, t => (t.path, t.fwks));
+
+// load available shims (by name)
+var shimsByName = Directory.EnumerateFiles(shimsDir, "*.dll", new EnumerationOptions() { RecurseSubdirectories = true })
+    .Where(f => Path.GetDirectoryName(f) != shimsDir)
+    .Select(f => (path: f, name: Path.GetFileName(f), fwk: NuGetFramework.ParseFolder(Path.GetFileName(Path.GetDirectoryName(f))!)))
+    .GroupBy(t => t.name)
+    .ToDictionary(
+        g => g.Key,
+        g => g.ToDictionary(t => t.fwk, t => t.path));
+
 
 // load our tfm list
 var packageTfms = reducer.ReduceEquivalent(
@@ -170,7 +182,7 @@ var backportsRef = new AssemblyReference("MonoMod.Backports", new(1, 0, 0, 0), f
 
 var generatedAsmFiles = new Dictionary<NuGetFramework, string>();
 // now, generate apicompat assemblies appropriately
-foreach (var tfm in tfms)
+foreach (var tfm in packageTfms)
 {
     // we generate one per TFM
     var bcl = KnownCorLibs.FromRuntimeInfo(
@@ -235,62 +247,42 @@ foreach (var tfm in tfms)
 }
 
 // and finally, generate the comparison sets
-
-// first, the package-tfm comparison sets
-var pkgCompareHighLow = new Dictionary<NuGetFramework, HashSet<NuGetFramework>>();
-foreach (var fwk in tfms)
+// note: we don't actually care about intra-tfm comparisons here, because that's handled by apicompat on the main Backports package
+// what we care about here is compat between non-shimmed and shimmed
+foreach (var framework in packageTfms)
 {
-    var reduceSet = tfms.Where(t => t != fwk).ToHashSet();
-    NuGetFramework? nearest;
-    var hasSameFramework = false;
-    while ((nearest = reducer.GetNearest(fwk, reduceSet)) != null)
-    {
-        reduceSet.Remove(nearest);
-        if (fwk.Framework == nearest.Framework)
-        {
-            if (hasSameFramework)
-            {
-                // only use the first choice with the same framework string
-                continue;
-            }
-            else
-            {
-                hasSameFramework = true;
-            }
-        }
-
-        if (!pkgCompareHighLow.TryGetValue(fwk, out var lowSet))
-        {
-            pkgCompareHighLow.Add(fwk, lowSet = new());
-        }
-        lowSet.Add(nearest);
-    }
-}
-
-// remove transitive checks (i.e. we have A -> B, B -> C, and A -> C, we want to remove A -> C)
-foreach (var (hi, lows) in pkgCompareHighLow)
-{
-    foreach (var lo in lows)
-    {
-        if (pkgCompareHighLow.TryGetValue(lo, out var dlows))
-        {
-            lows.ExceptWith(dlows);
-        }
-    }
-}
-
-// and print the result
-foreach (var (hi, lows) in pkgCompareHighLow)
-{
-    var hiSfn = hi.GetShortFolderName();
-    var hiFn = generatedAsmFiles[hi];
-    foreach (var lo in lows)
-    {
-        var loFn = generatedAsmFiles[lo];
-        Console.WriteLine($"{hiSfn}|{hiFn}|{lo.GetShortFolderName()}|{loFn}");
-    }
+    var tfm = framework.GetShortFolderName();
+    var fname = generatedAsmFiles[framework];
+    var nonShimRefPath = GetReferencePathForTfm(framework, useShim: false);
+    var shimRefPath = GetReferencePathForTfm(framework, useShim: true);
+    Console.WriteLine($"{tfm}|{fname}|{nonShimRefPath}|{shimRefPath}");
 }
 
 return 0;
+
+string GetReferencePathForTfm(NuGetFramework framework, bool useShim)
+{
+    IEnumerable<string> dlls = [];
+    foreach (var (_, (_, fwks)) in packages)
+    {
+        var best = reducer.GetNearest(framework, fwks.Keys);
+        if (best is null) continue; // no match, shouldn't be included
+        var pkgFiles = fwks[best].AsEnumerable();
+
+        // if we want to use shims instead, remap all of the files to use the shims
+        if (useShim)
+        {
+            pkgFiles = pkgFiles
+                .Select(f => Path.GetFileName(f))
+                .Select(n => shimsByName[n])
+                .Select(dict => dict[reducer.GetNearest(best, dict.Keys)!]);
+        }
+
+        // then add them to the dll list
+        dlls = dlls.Concat(pkgFiles);
+    }
+
+    return string.Join(",", dlls);
+}
 
 sealed record TypeExport(string FromPackage, string FromFile, Utf8String? Namespace, Utf8String Name, ImmutableArray<TypeExport> Nested);

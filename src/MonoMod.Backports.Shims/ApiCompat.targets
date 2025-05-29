@@ -1,0 +1,206 @@
+<Project>
+
+  <!-- ApiCompat fixes -->
+
+  <ItemGroup>
+    <ProjectReference Include="$(MMSourcePath)GenApiCompatDll\GenApiCompatDll.csproj"
+                      Reference="false" ReferenceOutputAssembly="false"
+                      OutputItemType="MMGenApiCompat"
+                      Private="false" Pack="false"
+                      SetTargetFramework="TargetFramework=net9.0"
+                      SkipGetTargetFrameworkProperties="true" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <_DummyRestoreProjectDir>$(IntermediateOutputPath)dummy/</_DummyRestoreProjectDir>
+    <_DummyRestoreProjectPath>$(_DummyRestoreProjectDir)dummy.csproj</_DummyRestoreProjectPath>
+    <_DummyRestoreProjectTemplate>
+      <Project Sdk="Microsoft.NET.Sdk">
+        <PropertyGroup>
+          <TargetFrameworks>{{TFMS}}</TargetFrameworks>
+          <EnableDefaultItems>false</EnableDefaultItems>
+          <CheckEolTargetFramework>false</CheckEolTargetFramework>
+          <NuGetAudit>false</NuGetAudit>
+          <CompileUsingReferenceAssemblies>false</CompileUsingReferenceAssemblies>
+        </PropertyGroup>
+        <ItemGroup>
+          <ProjectReference Include="$(MSBuildThisFileDirectory)../MonoMod.Backports/MonoMod.Backports.csproj" />
+          {{PKGREF}}
+        </ItemGroup>
+      </Project>
+    </_DummyRestoreProjectTemplate>
+
+    <_DummyPackageReferenceTemplate>
+      <PackageReference Include="{{PKGNAME}}" Version="{{PKGVER}}" Condition="{{TFMCOND}}" />
+    </_DummyPackageReferenceTemplate>
+
+    <_ApiCompatAsmOut>$(IntermediateOutputPath)apicompat/</_ApiCompatAsmOut>
+    <_BackportsTfmsTxt>$(IntermediateOutputPath)backports_tfms.txt</_BackportsTfmsTxt>
+  </PropertyGroup>
+
+  <Target Name="_GetPackagesSupportedTfms" DependsOnTargets="_GetShimmedPackages" Outputs="|%(_ShimmedPackages.Identity)|">
+    <PropertyGroup>
+      <_PkgPath>%(_ShimmedPackages.PkgPath)</_PkgPath>
+    </PropertyGroup>
+    <ItemGroup>
+      <_PkgLibFolderPaths Remove="@(_PkgLibFolders)" />
+      <_PkgLibFolderPaths Include="$([System.IO.Directory]::GetDirectories('$(_PkgPath)/lib/'))" />
+      <_PkgLibFolders Remove="@(_PkgLibFolders)" />
+      <_PkgLibFolders Include="@(_PkgLibFolderPaths->'$([System.IO.Path]::GetFileName('%(_PkgLibFolderPaths.Identity)'))')" />
+      <_PkgCond Remove="@(_PkgCond)" />
+      <_PkgCond Include="%(_PkgLibFolders.Identity)">
+        <TgtFwk>$([MSBuild]::GetTargetFrameworkIdentifier('%(_PkgLibFolders.Identity)'))</TgtFwk>
+        <TgtVer>$([MSBuild]::GetTargetFrameworkVersion('%(_PkgLibFolders.Identity)'))</TgtVer>
+      </_PkgCond>
+      <_PkgCond>
+        <Cond>
+          (%24([MSBuild]::GetTargetFrameworkIdentifier('%24(TargetFramework)')) == '%(TgtFwk)'
+          and %24([MSBuild]::VersionGreaterThanOrEquals(%24([MSBuild]::GetTargetFrameworkVersion('%24(TargetFramework)')),'%(TgtVer)')))
+        </Cond>
+      </_PkgCond>
+    </ItemGroup>
+    <PropertyGroup>
+      <_PkgTfms>@(_PkgLibFolders)</_PkgTfms>
+      <_PkgCond>@(_PkgCond->'%(Cond)',' or ')</_PkgCond>
+    </PropertyGroup>
+    <ItemGroup>
+      <_ShimmedPackages Update="%(_ShimmedPackages.Identity)" Tfms="$(_PkgTfms)" TfmCond="$(_PkgCond)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_FixReferencePathForValidate" DependsOnTargets="_SetUpShimPackagePaths;_GetPackagesSupportedTfms">
+
+    <!-- Ask Backports for the list of TFMs to test against -->
+    <MSBuild Projects="$(MSBuildThisFileDirectory)../MonoMod.Backports/MonoMod.Backports.csproj"
+             Targets="GetProperties"
+             Properties="PropertyNames=TargetFrameworks;BuildProjectReferences=false">
+      <Output ItemName="_BackportsProps" TaskParameter="TargetOutputs" />
+    </MSBuild>
+
+    <PropertyGroup>
+      <_BackportsTfms>@(_BackportsProps->'%(Value)')</_BackportsTfms>
+    </PropertyGroup>
+    <ItemGroup>
+      <_BackportsTfms1 Include="$(_BackportsTfms)" />
+      <_BackportsTfms1 Include="$(_TfmsWithFiles)" />
+      <_BackportsTfms Include="@(_BackportsTfms1->Distinct())" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_BackportsTfms>@(_BackportsTfms)</_BackportsTfms>
+    </PropertyGroup>
+
+    <WriteLinesToFile File="$(_BackportsTfmsTxt)" Lines="@(_BackportsTfms)" WriteOnlyWhenDifferent="false" Overwrite="true" />
+
+    <!-- Generate and restore dummy project -->
+    <MakeDir Directories="$(_DummyRestoreProjectDir)" />
+    <!-- Make sure it doesn't inherit parent dir.build.* -->
+    <WriteLinesToFile Lines="&lt;Project&gt;&lt;/Project&gt;" File="$(_DummyRestoreProjectDir)Directory.Build.props" Overwrite="true" />
+    <WriteLinesToFile Lines="&lt;Project&gt;&lt;/Project&gt;" File="$(_DummyRestoreProjectDir)Directory.Build.targets" Overwrite="true" />
+    <WriteLinesToFile Lines="$(_DummyRestoreProjectTemplate.Replace('{{TFMS}}', '$(_BackportsTfms)').Replace('{{PKGREF}}', ''))" File="$(_DummyRestoreProjectPath)" Overwrite="true" />
+
+    <!-- Run a restore -->
+    <MSBuild Projects="$(_DummyRestoreProjectPath)" Targets="Restore" />
+
+    <!-- Then get reference path -->
+    <MSBuild Projects="$(_DummyRestoreProjectPath)"
+             Targets="GetReferencesForApiCompatValidatePackage"
+             Properties="TargetFramework=%(_BackportsTfms.Identity);
+                         BuildProjectReferences=false">
+      <Output ItemName="_ApiCompatRefPath" TaskParameter="TargetOutputs" />
+    </MSBuild>
+
+    <!-- Invoke GenApiCompatDll to figure out the set of comparisons to make -->
+    <PropertyGroup>
+      <_NativeExecutableExtension Condition="'$(_NativeExecutableExtension)' == '' and '$(OS)' == 'Windows_NT'">.exe</_NativeExecutableExtension>
+      <_GenApiCompatExe>%(MMGenApiCompat.RelativeDir)%(FileName)$(_NativeExecutableExtension)</_GenApiCompatExe>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_PPArguments Remove="@(_PPArguments)" />
+      <!-- 1: the output directory -->
+      <_PPArguments Include="$(IntermediateOutputPath)apicompat/" />
+      <!-- 2: tfm file -->
+      <_PPArguments Include="$(_BackportsTfmsTxt)" />
+      <!-- 3: the path to the generated shims -->
+      <_PPArguments Include="$(_ShimsDir)" />
+      <!-- 4: the paths to the packages to process -->
+      <_PPArguments Include="%(_ShimmedPackages.PkgPath)" />
+    </ItemGroup>
+
+    <Exec ConsoleToMsBuild="true" LogStandardErrorAsError="true"
+      Command="&quot;$(_GenApiCompatExe)&quot; @(_PPArguments->'&quot;%(Identity)&quot;',' ')">
+      <Output TaskParameter="ExitCode" PropertyName="_ExitCode" />
+      <Output TaskParameter="ConsoleOutput" ItemName="_GenApiCompatOutput" />
+    </Exec>
+
+    <Error Text="ShimGen failed" Condition="'$(_ExitCode)' != '0'" />
+
+    <!-- Now, we need to parse the GenApiCompat output -->
+    <ItemGroup>
+      <_GenApiCompatParsed Include="%(_GenApiCompatOutput.Identity)">
+        <Tfm>$([System.String]::Copy('%(Identity)').Split('|')[0])</Tfm>
+        <Dll>$([System.String]::Copy('%(Identity)').Split('|')[1])</Dll>
+        <LeftRefPath>$([System.String]::Copy('%(Identity)').Split('|')[2])</LeftRefPath>
+        <RightRefPath>$([System.String]::Copy('%(Identity)').Split('|')[3])</RightRefPath>
+      </_GenApiCompatParsed>
+    </ItemGroup>
+
+  </Target>
+
+  <Target Name="_ApiCompatSelectRefPath" DependsOnTargets="_FixReferencePathForValidate" Outputs="|%(_GenApiCompatParsed.Identity)|">
+    <PropertyGroup>
+      <_Tfm>%(_GenApiCompatParsed.Tfm)</_Tfm>
+      <_RefPath></_RefPath>
+      <_RefPath Condition="'$(_Tfm)' == '%(_ApiCompatRefPath.Identity)'">%(_ApiCompatRefPath.ReferencePath)</_RefPath>
+    </PropertyGroup>
+    <ItemGroup>
+      <_GenApiCompatParsed Update="%(_GenApiCompatParsed.Identity)">
+        <LeftRefPath>%(LeftRefPath),$(_RefPath)</LeftRefPath>
+        <RightRefPath>%(RightRefPath),$(_RefPath)</RightRefPath>
+      </_GenApiCompatParsed>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_ApiCompatFinalizeInputs" DependsOnTargets="_ApiCompatSelectRefPath">
+    <ItemGroup>
+      <ApiCompatLeftAssembliesTransformationPattern Include="^.+apicompat/(.+)(/|\\).+$" ReplacementString="$1 baseline" />
+      <ApiCompatRightAssembliesTransformationPattern Include="^.+$" ReplacementString="shimmed" />
+    </ItemGroup>
+  </Target>
+
+  <PropertyGroup>
+    <_ApiCompatValidateAssembliesSemaphoreFile>$(IntermediateOutputPath)$(MSBuildThisFileName).apicompat.semaphore</_ApiCompatValidateAssembliesSemaphoreFile>
+    <ApiCompatValidateAssembliesDependsOn>CollectApiCompatInputs;$(ApiCompatValidateAssembliesDependsOn);_ApiCompatFinalizeInputs</ApiCompatValidateAssembliesDependsOn>
+  </PropertyGroup>
+
+  <Target Name="DoApiCompatValidateAssembliesCore"
+          AfterTargets="Pack"
+          Inputs="@(_GenApiCompatParsed);
+                  @(ApiCompatSuppressionFile);
+                  $(ApiCompatSuppressionOutputFile)"
+          Outputs="$(_ApiCompatValidateAssembliesSemaphoreFile)"
+          DependsOnTargets="$(ApiCompatValidateAssembliesDependsOn)">
+    <Microsoft.DotNet.ApiCompat.Task.ValidateAssembliesTask
+      RoslynAssembliesPath="$(RoslynAssembliesPath)"
+      LeftAssemblies="@(_GenApiCompatParsed->'%(Dll)')"
+      RightAssemblies="@(_GenApiCompatParsed->'%(Dll)')"
+      GenerateSuppressionFile="$(ApiCompatGenerateSuppressionFile)"
+      PreserveUnnecessarySuppressions="$(ApiCompatPreserveUnnecessarySuppressions)"
+      PermitUnnecessarySuppressions="$(ApiCompatPermitUnnecessarySuppressions)"
+      SuppressionFiles="@(ApiCompatSuppressionFile)"
+      SuppressionOutputFile="$(ApiCompatSuppressionOutputFile)"
+      NoWarn="$(NoWarn)"
+      RespectInternals="$(ApiCompatRespectInternals)"
+      EnableRuleAttributesMustMatch="$(ApiCompatEnableRuleAttributesMustMatch)"
+      ExcludeAttributesFiles="@(ApiCompatExcludeAttributesFile)"
+      EnableRuleCannotChangeParameterName="$(ApiCompatEnableRuleCannotChangeParameterName)"
+      EnableStrictMode="$(ApiCompatStrictMode)"
+      LeftAssembliesReferences="@(_GenApiCompatParsed->'%(LeftRefPath)')"
+      RightAssembliesReferences="@(_GenApiCompatParsed->'%(RightRefPath)')"
+      CreateWorkItemPerAssembly="true"
+      LeftAssembliesTransformationPattern="@(ApiCompatLeftAssembliesTransformationPattern)"
+      RightAssembliesTransformationPattern="@(ApiCompatRightAssembliesTransformationPattern)"
+      SemaphoreFile="$(_ApiCompatValidateAssembliesSemaphoreFile)" />
+  </Target>
+
+</Project>

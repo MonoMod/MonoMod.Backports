@@ -72,7 +72,7 @@ namespace System.Threading
         /// Initializes the <see cref="System.Threading.ThreadLocal{T}"/> instance.
         /// </summary>
         /// <param name="trackAllValues">Whether to track all values set on the instance and expose them through the Values property.</param>
-        public ThreadLocal(bool trackAllValues)
+        internal ThreadLocal(bool trackAllValues)
         {
             Initialize(null, trackAllValues);
         }
@@ -108,7 +108,7 @@ namespace System.Threading
         /// <exception cref="System.ArgumentNullException">
         /// <paramref name="valueFactory"/> is a null reference (Nothing in Visual Basic).
         /// </exception>
-        public ThreadLocal(Func<T> valueFactory, bool trackAllValues)
+        internal ThreadLocal(Func<T> valueFactory, bool trackAllValues)
         {
             if (valueFactory is null)
                 ThrowHelper.ThrowArgumentNullException(nameof(valueFactory));
@@ -431,7 +431,7 @@ namespace System.Threading
         /// <exception cref="System.ObjectDisposedException">
         /// The <see cref="ThreadLocal{T}"/> instance has been disposed.
         /// </exception>
-        public IList<T> Values
+        internal IList<T> Values
         {
             get
             {

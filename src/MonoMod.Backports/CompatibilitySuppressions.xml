@@ -3,7 +3,35 @@
 <Suppressions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:System.Collections.Concurrent.Partitioner.Create``1(System.Collections.Generic.IEnumerable{``0},System.Collections.Concurrent.EnumerablePartitionerOptions)</Target>
+    <Left>lib/net35/MonoMod.Backports.dll</Left>
+    <Right>lib/net35/MonoMod.Backports.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:System.HashCode.AddBytes(System.ReadOnlySpan{System.Byte})</Target>
+    <Left>lib/net35/MonoMod.Backports.dll</Left>
+    <Right>lib/net35/MonoMod.Backports.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:System.Threading.ThreadLocal`1.#ctor(System.Boolean)</Target>
+    <Left>lib/net35/MonoMod.Backports.dll</Left>
+    <Right>lib/net35/MonoMod.Backports.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:System.Threading.ThreadLocal`1.#ctor(System.Func{`0},System.Boolean)</Target>
+    <Left>lib/net35/MonoMod.Backports.dll</Left>
+    <Right>lib/net35/MonoMod.Backports.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:System.Threading.ThreadLocal`1.get_Values</Target>
     <Left>lib/net35/MonoMod.Backports.dll</Left>
     <Right>lib/net35/MonoMod.Backports.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -31,7 +59,35 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:System.Collections.Concurrent.Partitioner.Create``1(System.Collections.Generic.IEnumerable{``0},System.Collections.Concurrent.EnumerablePartitionerOptions)</Target>
+    <Left>ref/net35/MonoMod.Backports.dll</Left>
+    <Right>lib/net35/MonoMod.Backports.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:System.HashCode.AddBytes(System.ReadOnlySpan{System.Byte})</Target>
+    <Left>ref/net35/MonoMod.Backports.dll</Left>
+    <Right>lib/net35/MonoMod.Backports.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:System.Threading.ThreadLocal`1.#ctor(System.Boolean)</Target>
+    <Left>ref/net35/MonoMod.Backports.dll</Left>
+    <Right>lib/net35/MonoMod.Backports.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:System.Threading.ThreadLocal`1.#ctor(System.Func{`0},System.Boolean)</Target>
+    <Left>ref/net35/MonoMod.Backports.dll</Left>
+    <Right>lib/net35/MonoMod.Backports.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:System.Threading.ThreadLocal`1.get_Values</Target>
     <Left>ref/net35/MonoMod.Backports.dll</Left>
     <Right>lib/net35/MonoMod.Backports.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -61,13 +117,13 @@
     <DiagnosticId>CP0021</DiagnosticId>
     <Target>T:System.Collections.Concurrent.ConcurrentDictionary`2``0:notnull</Target>
     <Left>lib/net35/MonoMod.Backports.dll</Left>
-    <Right>lib/net452/MonoMod.Backports.dll</Right>
+    <Right>lib/net40/MonoMod.Backports.dll</Right>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0021</DiagnosticId>
     <Target>T:System.Tuple`8``7:notnull</Target>
     <Left>lib/net35/MonoMod.Backports.dll</Left>
-    <Right>lib/net452/MonoMod.Backports.dll</Right>
+    <Right>lib/net40/MonoMod.Backports.dll</Right>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0021</DiagnosticId>

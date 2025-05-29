@@ -3,7 +3,7 @@
 
   <!-- C#-specific properties -->
   <PropertyGroup>
-    <LangVersion>12</LangVersion>
+    <LangVersion>preview</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable> <!-- C# projects should have nullability enabled. -->
     <WarningsAsErrors>$(WarningsAsErrors);nullable</WarningsAsErrors> <!-- Nullability warnings should be errors. -->

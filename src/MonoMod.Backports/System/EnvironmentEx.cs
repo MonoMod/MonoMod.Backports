@@ -10,13 +10,19 @@ namespace System
 {
     public static class EnvironmentEx
     {
-
         public static int CurrentManagedThreadId
 #if HAS_CURRENTMANAGEDTHREADID
             => Environment.CurrentManagedThreadId;
 #else
             => Thread.CurrentThread.ManagedThreadId;
 #endif
+    }
 
+    public static class EnvironmentEx2
+    {
+        extension(Environment)
+        {
+            public static int CurrentManagedThreadId => EnvironmentEx.CurrentManagedThreadId;
+        }
     }
 }

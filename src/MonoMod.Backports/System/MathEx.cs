@@ -14,6 +14,9 @@ namespace System
     /// </summary>
     public static class MathEx
     {
+        extension(Math)
+        {
+
         /// <summary>Returns <paramref name="value" /> clamped to the inclusive range of <paramref name="min" /> and <paramref name="max" />.</summary>
         /// <param name="value">The value to be clamped.</param>
         /// <param name="min">The lower bound of the result.</param>
@@ -473,10 +476,12 @@ namespace System
             return value;
         }
 #endif
+        }
 
 #if !HAS_CLAMP
         [DoesNotReturn]
-        private static void ThrowMinMaxException<T>(T min, T max) {
+        private static void ThrowMinMaxException<T>(T min, T max)
+        {
             throw new ArgumentException($"Minimum {min} is less than maximum {max}");
         }
 #endif

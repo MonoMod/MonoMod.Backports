@@ -59,7 +59,7 @@ public static class ThreadLocalEx
     private static void ThrowTrackAllValuesNotSupported()
         => ThrowHelper.ThrowNotSupportedException("trackAllValues is not supported on this platform");
 #endif
-
+    
     public static bool SupportsAllValues
 #if HAS_ALLVALUES
         => true;
@@ -67,42 +67,45 @@ public static class ThreadLocalEx
         => false;
 #endif
 
-    public static ThreadLocal<T> Create<T>(bool trackAllValues)
+    extension<T>(ThreadLocal<T>)
     {
+        public static ThreadLocal<T> Create(bool trackAllValues)
+        {
 #if HAS_ALLVALUES
-        return new(trackAllValues);
+            return new(trackAllValues);
 #else
-        if (ThreadLocalInfo<T>.Info.CreateBoolDel is { } create)
-        {
-            return create(trackAllValues);
-        }
+            if (ThreadLocalInfo<T>.Info.CreateBoolDel is { } create)
+            {
+                return create(trackAllValues);
+            }
 
-        if (trackAllValues)
-        {
-            ThrowTrackAllValuesNotSupported();
-        }
+            if (trackAllValues)
+            {
+                ThrowTrackAllValuesNotSupported();
+            }
 
-        return new();
+            return new();
 #endif
-    }
+        }
 
-    public static ThreadLocal<T> Create<T>(Func<T> valueFactory, bool trackAllValues)
-    {
+        public static ThreadLocal<T> Create(Func<T> valueFactory, bool trackAllValues)
+        {
 #if HAS_ALLVALUES
-        return new(trackAllValues);
+            return new(trackAllValues);
 #else
-        if (ThreadLocalInfo<T>.Info.CreateFuncBoolDel is { } create)
-        {
-            return create(valueFactory, trackAllValues);
-        }
+            if (ThreadLocalInfo<T>.Info.CreateFuncBoolDel is { } create)
+            {
+                return create(valueFactory, trackAllValues);
+            }
 
-        if (trackAllValues)
-        {
-            ThrowTrackAllValuesNotSupported();
-        }
+            if (trackAllValues)
+            {
+                ThrowTrackAllValuesNotSupported();
+            }
 
-        return new(valueFactory);
+            return new(valueFactory);
 #endif
+        }
     }
 
     public static IList<T> Values<T>(this ThreadLocal<T> threadLocal)
@@ -124,4 +127,18 @@ public static class ThreadLocalEx
 #endif
     }
 
+    extension<T>(ThreadLocal<T> self)
+    {
+        public IList<T> Values => self.Values();
+    }
+
+    extension<T>(ThreadLocal<T>)
+    {
+#if false // when extension constructors actually exist
+        public static ThreadLocal<T>(bool trackAllValues)
+            => Create<T>(trackAllValues);
+        public static ThreadLocal<T>(Func<T> valueFactory, bool trackAllValues)
+            => Create<T>(valueFactory, trackAllValues);
+#endif
+    }
 }

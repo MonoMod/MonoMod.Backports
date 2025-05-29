@@ -13,21 +13,24 @@ namespace System.Threading
     /// </summary>
     public static class MonitorEx
     {
+        extension(Monitor)
+        {
 
 #if HAS_MONITOR_ENTER_BYREF
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-        public static void Enter(object obj, ref bool lockTaken)
-        {
+            public static void Enter(object obj, ref bool lockTaken)
+            {
 #if HAS_MONITOR_ENTER_BYREF
-            Monitor.Enter(obj, ref lockTaken);
+                Monitor.Enter(obj, ref lockTaken);
 #else
-            if (lockTaken)
-                throw new ArgumentException("lockTaken was true.", nameof(lockTaken));
-            lockTaken = false;
-            Monitor.Enter(obj);
-            lockTaken = true;
+                if (lockTaken)
+                    throw new ArgumentException("lockTaken was true.", nameof(lockTaken));
+                lockTaken = false;
+                Monitor.Enter(obj);
+                lockTaken = true;
 #endif
+            }
         }
     }
 }

@@ -4,6 +4,7 @@
 
 #if NET6_0_OR_GREATER
 #define HAS_MAXLENGTH
+#define HAS_CLEARARRAY
 #endif
 
 using System.Runtime.CompilerServices;
@@ -35,5 +36,18 @@ namespace System
 #else
             => 0x6FFFFFFF; // this is a total estimate, intentionally kept smaller than the value in the .NET Core BCL
 #endif
+
+        [Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1062:Validate arguments of public methods",
+            Justification = "It is, this warning is a false positive.")]
+        public static void Clear(Array array)
+        {
+#if HAS_CLEARARRAY
+            Array.Clear(array);
+#else
+            if (array is null)
+                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.array);
+            Array.Clear(array, 0, array.Length);
+#endif
+        }
     }
 }

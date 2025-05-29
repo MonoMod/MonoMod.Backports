@@ -87,6 +87,11 @@ namespace System
         private static Exception CreateArgumentOutOfRangeException(ExceptionArgument argument) => new ArgumentOutOfRangeException(argument.ToString());
 
         [DoesNotReturn]
+        internal static void ThrowArgumentOutOfRangeException(string argument) => throw CreateArgumentOutOfRangeException(argument);
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static Exception CreateArgumentOutOfRangeException(string argument) => new ArgumentOutOfRangeException(argument);
+
+        [DoesNotReturn]
         internal static void ThrowArgumentOutOfRangeException_PrecisionTooLarge() => throw CreateArgumentOutOfRangeException_PrecisionTooLarge();
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static Exception CreateArgumentOutOfRangeException_PrecisionTooLarge() => new ArgumentOutOfRangeException("precision", $"Precision too large (max: {StandardFormat.MaxPrecision})");

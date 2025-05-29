@@ -20,7 +20,7 @@ namespace System.Buffers
     {
         // Store the shared ArrayPool in a field of its derived sealed type so the Jit can "see" the exact type
         // when the Shared property is inlined which will allow it to devirtualize calls made on it.
-        private static readonly TlsOverPerCoreLockedStacksArrayPool<T> s_shared = new TlsOverPerCoreLockedStacksArrayPool<T>();
+        private static readonly SharedArrayPool<T> s_shared = new SharedArrayPool<T>();
 
         /// <summary>
         /// Retrieves a shared <see cref="ArrayPool{T}"/> instance.
@@ -69,7 +69,7 @@ namespace System.Buffers
         /// </returns>
         /// <remarks>
         /// This buffer is loaned to the caller and should be returned to the same pool via
-        /// <see cref="Return"/> so that it may be reused in subsequent usage of <see cref="Rent"/>.
+        /// <see cref="Return(T[], bool)"/> so that it may be reused in subsequent usage of <see cref="Rent"/>.
         /// It is not a fatal error to not return a rented buffer, but failure to do so may lead to
         /// decreased application performance, as the pool may need to create a new buffer to replace
         /// the one lost.
@@ -84,7 +84,7 @@ namespace System.Buffers
         /// The buffer previously obtained from <see cref="Rent"/> to return to the pool.
         /// </param>
         /// <param name="clearArray">
-        /// If <c>true</c> and if the pool will store the buffer to enable subsequent reuse, <see cref="Return"/>
+        /// If <c>true</c> and if the pool will store the buffer to enable subsequent reuse, <see cref="Return(T[], bool)"/>
         /// will clear <paramref name="array"/> of its contents so that a subsequent consumer via <see cref="Rent"/>
         /// will not see the previous consumer's content.  If <c>false</c> or if the pool will release the buffer,
         /// the array's contents are left unchanged.
@@ -92,10 +92,16 @@ namespace System.Buffers
         /// <remarks>
         /// Once a buffer has been returned to the pool, the caller gives up all ownership of the buffer
         /// and must not use it. The reference returned from a given call to <see cref="Rent"/> must only be
-        /// returned via <see cref="Return"/> once.  The default <see cref="ArrayPool{T}"/>
+        /// returned via <see cref="Return(T[], bool)"/> once.  The default <see cref="ArrayPool{T}"/>
         /// may hold onto the returned buffer in order to rent it again, or it may release the returned buffer
         /// if it's determined that the pool already has enough buffers stored.
         /// </remarks>
         public abstract void Return(T[] array, bool clearArray = false);
+
+        internal void Return(T[] array, int lengthToClear)
+        {
+            array.AsSpan(0, lengthToClear).Clear();
+            Return(array);
+        }
     }
 }

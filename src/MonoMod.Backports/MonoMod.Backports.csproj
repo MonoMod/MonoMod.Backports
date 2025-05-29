@@ -5,6 +5,7 @@
     
     <!-- We're not going to be having any of the logic that would use the shared sources, so we'll just not include them -->
     <RootNamespace><![CDATA[ ]]></RootNamespace>
+    <NoWarn>$(NoWarn);CA1200;CA1716</NoWarn>
 
     <VersionPrefix>1.1.2</VersionPrefix>
     <PackageValidationBaselineVersion>1.1.0</PackageValidationBaselineVersion>

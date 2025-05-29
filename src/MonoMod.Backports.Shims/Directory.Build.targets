@@ -159,7 +159,7 @@
           <PropertyGroup>
             $(_ImportedPropOpen)true$(_ImportedPropClose)
           </PropertyGroup>
-          <ItemGroup Condition="'%24(DisableDefaultPackageConflictOverrides)' != 'true' and %24(DisableBackportsPackageConflictOverrides)' != 'true'">
+          <ItemGroup Condition="'%24(DisableDefaultPackageConflictOverrides)' != 'true' and '%24(DisableBackportsPackageConflictOverrides)' != 'true'">
             <PackageConflictOverrides Include="$(PackageId)">
               <OverriddenPackages>$(_OverridePackages)</OverriddenPackages>
             </PackageConflictOverrides>

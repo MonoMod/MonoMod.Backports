@@ -9,6 +9,10 @@
     <EnablePackageValidation>false</EnablePackageValidation>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <Description>Shims for MonoMod.Backports to redirect </Description>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- Turn off default pack inference entirely -->
     <PackInference Remove="@(PackInference)" />

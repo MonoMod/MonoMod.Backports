@@ -164,7 +164,7 @@
   <Target Name="_ApiCompatFinalizeInputs" DependsOnTargets="_ApiCompatSelectRefPath">
     <ItemGroup>
       <ApiCompatLeftAssembliesTransformationPattern Include="^.+apicompat/(.+)(/|\\).+$" ReplacementString="$1 baseline" />
-      <ApiCompatRightAssembliesTransformationPattern Include="^.+$" ReplacementString="shimmed" />
+      <ApiCompatRightAssembliesTransformationPattern Include="^.+apicompat/(.+)(/|\\).+$" ReplacementString="$1 shimmed" />
     </ItemGroup>
   </Target>
 

@@ -39,17 +39,6 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <_TFMIdentifier>$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)'))</_TFMIdentifier>
-  </PropertyGroup>
-
-  <ItemGroup Condition="'$(_TFMIdentifier)' == '.NETFramework'">
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-    
-  <PropertyGroup>
     <CoreCompileDependsOn>$(CoreCompileDependsOn);_DisableAnalyzers</CoreCompileDependsOn>
   </PropertyGroup>
   

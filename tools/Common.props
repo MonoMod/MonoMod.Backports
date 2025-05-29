@@ -15,7 +15,7 @@
         net6.0;net5.0;net7.0;net8.0;net9.0;
         netcoreapp2.1;netcoreapp3.0;netcoreapp3.1;
         netstandard2.0;netstandard2.1;
-        net35;net452
+        net35;net452;net462;net47
     </TargetFrameworks>
     <!-- If a project wants to target some subset or other set, then they can just reassign TargetFrameworks in their project file -->
 
@@ -81,5 +81,5 @@
   <Import Project="$(MMLanguageProps)" Condition="Exists('$(MMLanguageProps)')" />
 
   <Import Project="$(MMImportAfterProps)" Condition="'$(MMImportAfterProps)' != '' and Exists('$(MMImportAfterProps)')" />
-
+  
 </Project>

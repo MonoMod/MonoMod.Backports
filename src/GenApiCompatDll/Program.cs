@@ -227,8 +227,18 @@ foreach (var tfm in packageTfms)
         var pkgFwks = packages[export.FromPackage].fwks;
         if (reducer.GetNearest(tfm, pkgFwks.Keys) is not null)
         {
-            // the package provides something compatible with this TFM, reference the FromFile ref
-            impl = assemblyRefsByName[export.FromFile];
+            // valuetuple is a bit special...
+            if (export.FromPackage.Equals("system.valuetuple", StringComparison.OrdinalIgnoreCase)
+                && tfm is { Framework: ".NETFramework" } && tfm.Version >= new Version(4,7,1))
+            {
+                // on .NET Framework 4.7.1, System.ValueTuple was moved into mscorlib
+                impl = (IImplementation)module.CorLibTypeFactory.CorLibScope;
+            }
+            else
+            {
+                // the package provides something compatible with this TFM, reference the FromFile ref
+                impl = assemblyRefsByName[export.FromFile];
+            }
         }
         else
         {

@@ -8,6 +8,13 @@
   <!-- Include the language-specific targets file, if it exists -->
   <Import Project="$(MMLanguageTargets)" Condition="Exists('$(MMLanguageTargets)')" />
 
+  <ItemGroup Condition="'$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETFramework'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
   <Target Name="GetProperties" Outputs="@(Properties)">
     <ItemGroup>
       <_PropertiesToGet Remove="@(_PropertiesToGet)" />

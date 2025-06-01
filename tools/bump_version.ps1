@@ -22,14 +22,15 @@ elseif ($BumpVersion -eq 'Patch')
     $VersionIndex = 2;
 }
 
-Push-Location $PSScriptRoot;
-Set-Location ../;
+Push-Location $PSScriptRoot/..;
 try
 {
+    $props = Join-Path $PSScriptRoot .. "Version.props";
+
     # load the project up as a normal XML file
     $xml = [xml]::new();
     $xml.PreserveWhitespace = $true;
-    $xml.Load("Version.props");
+    $xml.Load($props);
 
     $version = $xml.Project.PropertyGroup.VersionPrefix;
     if ($VersionIndex -eq 0)
@@ -53,7 +54,7 @@ try
     Write-Host "New version: $version";
 
     # and write the project file back out
-    $xml.Save("Version.props");
+    $xml.Save($props);
 }
 finally
 {

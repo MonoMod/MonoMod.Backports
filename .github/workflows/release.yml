@@ -65,10 +65,18 @@ jobs:
       version: ${{ inputs.prerelease-str }}
       no-suffix: ${{ !inputs.prerelease }}
 
-  upload:
+  upload-github:
     needs: [setup, build]
     if: '!inputs.dryrun'
-    name: Upload Packages
+    name: Upload Packages (GitHub)
+    uses: ./.github/workflows/upload-packages.yml
+    with:
+      workflow-id: ${{ github.run_id }}
+
+  upload-nuget:
+    needs: [setup, build]
+    if: '!inputs.dryrun'
+    name: Upload Packages (NuGet)
     uses: ./.github/workflows/upload-packages.yml
     with:
       workflow-id: ${{ github.run_id }}

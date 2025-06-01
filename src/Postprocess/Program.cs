@@ -26,12 +26,16 @@ if (args is not [
 using var fileservice = new ByteArrayFileService();
 var listener = ThrowErrorListener.Instance;
 
+var pathProvider = Environment.GetEnvironmentVariable("DOTNET_ROOT") is { } root
+    ? new DotNetCorePathProvider(root)
+    : new DotNetCorePathProvider();
+
 // load baseline assemblies
 var readerParams = new ModuleReaderParameters(fileservice)
 {
-    PEReaderParameters = new(listener)
+    PEReaderParameters = new(listener),
 };
-var (context, backportsImage, backportsModule) = LoadContextForRootModule(backportsPath, readerParams);
+var (context, backportsImage, backportsModule) = LoadContextForRootModule(backportsPath, readerParams, pathProvider);
 var backportsResolver = (AssemblyResolverBase)context.AssemblyResolver;
 var ilhelpersModule = LoadModuleInContext(context, ilhelpersPath);
 
@@ -68,11 +72,18 @@ if (File.Exists(backportsXml))
 
 return 0;
 
-static (RuntimeContext context, PEImage image, ModuleDefinition module) LoadContextForRootModule(string path, ModuleReaderParameters readerParams)
+static (RuntimeContext context, PEImage image, ModuleDefinition module) LoadContextForRootModule(string path, ModuleReaderParameters readerParams, DotNetCorePathProvider pathProvider)
 {
     var image = PEImage.FromFile(path, readerParams.PEReaderParameters);
     var module = ModuleDefinition.FromImage(image, readerParams);
     var context = module.RuntimeContext;
+
+    if (context.AssemblyResolver is DotNetCoreAssemblyResolver asr)
+    {
+        context = new RuntimeContext(module.OriginalTargetRuntime,
+            new DotNetCoreAssemblyResolver(readerParams, null, module.OriginalTargetRuntime.Version, pathProvider));
+        module = ModuleDefinition.FromImage(image, context.DefaultReaderParameters);
+    }
 
     var asmRef = new AssemblyReference(module.Assembly!);
     if (context.AssemblyResolver.Resolve(asmRef) is { ManifestModule: not null } asm)

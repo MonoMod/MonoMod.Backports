@@ -38,7 +38,7 @@ jobs:
 
   build:
     needs: [setup]
-    if: ${{ !needs.setup.outputs.should_skip }}
+    if: needs.setup.outputs.should_skip != 'true'
     name: 'Build #${{ needs.setup.outputs.ver }}'
     uses: ./.github/workflows/build.yml
     with:
@@ -50,4 +50,4 @@ jobs:
     name: Upload Packages
     uses: ./.github/workflows/upload-packages.yml
     with:
-      workflow-id: ${{ needs.setup.outputs.should_skip && fromJSON(needs.setup.outputs.skipped_by).workflowId || github.run_id }}
+      workflow-id: ${{ needs.setup.outputs.should_skip == 'true' && fromJSON(needs.setup.outputs.skipped_by).workflowId || github.run_id }}

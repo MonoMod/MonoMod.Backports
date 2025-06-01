@@ -20,7 +20,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: Build
+    name: Upload
     env:
       VersionSuffix: ${{ !inputs.no-suffix && format('daily.{0}', inputs.version) }}
       DoNotAddSuffix: ${{ inputs.no-suffix && '1' }}

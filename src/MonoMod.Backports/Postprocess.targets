@@ -37,6 +37,7 @@
       <_PPArguments Include="$(_PPOutputDir)$(_BackportsName)" /> <!-- 1: the output assembly name-->
       <_PPArguments Include="$(_BackportsPath)" /> <!-- 2: input backports path -->
       <_PPArguments Include="$(_ILHelpersPath)" /> <!-- 3: input ILHelpers path -->
+      <_PPArguments Include="@(ReferencePath)" /> <!-- 4: input reference path -->
     </ItemGroup>
     
     <Exec Command="&quot;$(_PostprocessorBinary)&quot; @(_PPArguments->'&quot;%(Identity)&quot;',' ')" LogStandardErrorAsError="true">

@@ -10,11 +10,12 @@ using Postprocess;
 
 if (args is not [
     var outputBackports,
-    var backportsPath, var ilhelpersPath
+    var backportsPath, var ilhelpersPath,
+    ..var referencePath
     ])
 {
     Console.Error.WriteLine("Assemblies not provided.");
-    Console.Error.WriteLine("Syntax: <output dll> <MonoMod.Backports.dll> <MonoMod.ILHelpers.dll>");
+    Console.Error.WriteLine("Syntax: <output dll> <MonoMod.Backports.dll> <MonoMod.ILHelpers.dll> <reference path item>...");
     Console.Error.WriteLine("Arguments provided: ");
     foreach (var arg in args)
     {
@@ -26,18 +27,16 @@ if (args is not [
 using var fileservice = new ByteArrayFileService();
 var listener = ThrowErrorListener.Instance;
 
-var pathProvider = Environment.GetEnvironmentVariable("DOTNET_ROOT") is { } root
-    ? new DotNetCorePathProvider(root)
-    : new DotNetCorePathProvider();
-
 // load baseline assemblies
 var readerParams = new ModuleReaderParameters(fileservice)
 {
     PEReaderParameters = new(listener),
 };
-var (context, backportsImage, backportsModule) = LoadContextForRootModule(backportsPath, readerParams, pathProvider);
+var resolver = new ReferencePathAssemblyResolver(referencePath, readerParams);
+var (context, backportsImage, backportsModule) = LoadContextForRootModule(backportsPath, readerParams, resolver);
+readerParams.RuntimeContext = context;
 var backportsResolver = (AssemblyResolverBase)context.AssemblyResolver;
-var ilhelpersModule = LoadModuleInContext(context, ilhelpersPath);
+var ilhelpersModule = LoadModuleInContext(context, readerParams, ilhelpersPath);
 
 var peImageBuilder = new ManagedPEImageBuilder(listener);
 
@@ -72,18 +71,14 @@ if (File.Exists(backportsXml))
 
 return 0;
 
-static (RuntimeContext context, PEImage image, ModuleDefinition module) LoadContextForRootModule(string path, ModuleReaderParameters readerParams, DotNetCorePathProvider pathProvider)
+static (RuntimeContext context, PEImage image, ModuleDefinition module) LoadContextForRootModule(string path, ModuleReaderParameters readerParams, IAssemblyResolver assemblyResolver)
 {
     var image = PEImage.FromFile(path, readerParams.PEReaderParameters);
     var module = ModuleDefinition.FromImage(image, readerParams);
-    var context = module.RuntimeContext;
 
-    if (context.AssemblyResolver is DotNetCoreAssemblyResolver asr)
-    {
-        context = new RuntimeContext(module.OriginalTargetRuntime,
-            new DotNetCoreAssemblyResolver(readerParams, null, module.OriginalTargetRuntime.Version, pathProvider));
-        module = ModuleDefinition.FromImage(image, context.DefaultReaderParameters);
-    }
+    var context = new RuntimeContext(module.OriginalTargetRuntime, assemblyResolver);
+    readerParams.RuntimeContext = context;
+    module = ModuleDefinition.FromImage(image, readerParams);
 
     var asmRef = new AssemblyReference(module.Assembly!);
     if (context.AssemblyResolver.Resolve(asmRef) is { ManifestModule: not null } asm)
@@ -94,9 +89,9 @@ static (RuntimeContext context, PEImage image, ModuleDefinition module) LoadCont
     ((AssemblyResolverBase)context.AssemblyResolver).AddToCache(asmRef, module.Assembly!);
     return (context, image, module);
 }
-static ModuleDefinition LoadModuleInContext(RuntimeContext context, string path)
+static ModuleDefinition LoadModuleInContext(RuntimeContext context, ModuleReaderParameters mrp, string path)
 {
-    var module = ModuleDefinition.FromFile(path, context.DefaultReaderParameters);
+    var module = ModuleDefinition.FromFile(path, mrp);
     var asmRef = new AssemblyReference(module.Assembly!);
 
     if (context.AssemblyResolver.Resolve(asmRef) is { ManifestModule: not null } asm)

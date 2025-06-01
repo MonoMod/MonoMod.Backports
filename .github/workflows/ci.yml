@@ -1,0 +1,53 @@
+name: CI
+on:
+  push:
+  pull_request:
+  
+defaults:
+  run:
+    shell: pwsh
+
+env:
+  DOTNET_TELEMETRY_OPTOUT: ttrue
+  DOTNET_NOLOGO: true
+  NUGET_PACKAGES: ${{github.workspace}}/artifacts/pkg
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }} 
+  cancel-in-progress: true
+
+jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+      skipped_by: ${{ steps.skip_check.outputs.skipped_by }}
+      ver: ${{ steps.computever.outputs.ver }}
+    steps:
+    - name: Check if this run should be skipped
+      id: skip_check
+      uses: fkirc/skip-duplicate-actions@v5
+      with:
+        cancel_others: true
+        concurrent_skipping: same_content_newer
+        
+    - name: Compute Version
+      id: computever
+      run: echo "ver=$(Get-Date -Format y.M.d).${{ github.run_number }}.${{ github.run_attempt }}" >> $env:GITHUB_OUTPUT
+
+  build:
+    needs: [setup]
+    if: ${{ !needs.setup.outputs.should_skip }}
+    name: 'Build #${{ needs.setup.outputs.ver }}'
+    uses: ./.github/workflows/build.yml
+    with:
+      version: ${{ needs.setup.outputs.ver }}
+
+  upload:
+    needs: [setup, build]
+    if: github.ref_name == 'master'
+    name: Upload Packages
+    uses: ./.github/workflows/upload-packages.yml
+    with:
+      workflow-id: ${{ needs.setup.outputs.should_skip && fromJSON(needs.setup.outputs.skipped_by).workflowId || github.run_id }}

@@ -19,7 +19,8 @@ namespace System
             return type.IsByRefLike;
 #else
             // TODO: cache this information somehow
-            foreach (var attr in type.GetCustomAttributes(false)) {
+            foreach (var attr in type.GetCustomAttributes(false))
+            {
                 if (attr.GetType().FullName == "System.Runtime.CompilerServices.IsByRefLikeAttribute")
                     return true;
             }

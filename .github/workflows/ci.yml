@@ -51,5 +51,3 @@ jobs:
     uses: ./.github/workflows/upload-packages.yml
     with:
       workflow-id: ${{ needs.setup.outputs.should_skip == 'true' && fromJSON(needs.setup.outputs.skipped_by).workflowId || github.run_id }}
-    secrets:
-      nuget-key: ${{ github.token }}

@@ -13,7 +13,6 @@ on:
         description: URL of the nuget feed to upload to
     secrets:
       nuget-key:
-        required: true
         
 defaults:
   run:
@@ -57,5 +56,5 @@ jobs:
         run-id: ${{ inputs.workflow-id }}
 
     - name: Push packages
-      run: dotnet nuget push -s "${{ inputs.nuget-url }}" -k ${{ secrets.nuget-key }} (Get-Item artifacts/package/release/*.nupkg)
+      run: dotnet nuget push -s "${{ inputs.nuget-url }}" -k ${{ secrets.nuget-key || github.token }} (Get-Item artifacts/package/release/*.nupkg)
 

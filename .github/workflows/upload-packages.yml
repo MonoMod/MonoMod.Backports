@@ -7,6 +7,13 @@ on:
         type: string
         default: ${{ github.run_id }}
         description: The ID of the workflow to upload packages from
+      nuget-url:
+        type: string
+        default: "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+        description: URL of the nuget feed to upload to
+    secrets:
+      nuget-key:
+        required: true
         
 defaults:
   run:
@@ -50,5 +57,5 @@ jobs:
         run-id: ${{ inputs.workflow-id }}
 
     - name: Push packages
-      run: dotnet nuget push -s "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" -k ${{ github.token }} (Get-Item artifacts/package/release/*.nupkg)
+      run: dotnet nuget push -s "${{ inputs.nuget-url }}" -k ${{ secrets.nuget-key }} (Get-Item artifacts/package/release/*.nupkg)
 

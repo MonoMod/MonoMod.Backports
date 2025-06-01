@@ -42,7 +42,7 @@ jobs:
     name: 'Build #${{ needs.setup.outputs.ver }}'
     uses: ./.github/workflows/build.yml
     with:
-      version: ${{ needs.setup.outputs.ver }}
+      version: daily.${{ needs.setup.outputs.ver }}
 
   upload:
     needs: [setup, build]
@@ -51,3 +51,5 @@ jobs:
     uses: ./.github/workflows/upload-packages.yml
     with:
       workflow-id: ${{ needs.setup.outputs.should_skip == 'true' && fromJSON(needs.setup.outputs.skipped_by).workflowId || github.run_id }}
+    secrets:
+      nuget-key: ${{ github.token }}

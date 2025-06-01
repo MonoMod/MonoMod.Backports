@@ -6,6 +6,7 @@
     <File Path="global.json" />
     <File Path="LICENSE" />
     <File Path="nuget.config" />
+    <File Path="Version.props" />
     <Project Path=".github/.github.csproj" />
     <Project Path="docs/docs.csproj" />
     <Project Path="tools/tools.csproj" />

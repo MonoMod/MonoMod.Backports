@@ -1,0 +1,119 @@
+name: Make Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      dryrun:
+        description: Dry Run
+        type: boolean
+        default: true
+      bumpkind:
+        description: Version slot to bump after making release
+        type: choice
+        required: true
+        default: Patch
+        options:
+        - Patch
+        - Minor
+        - Major
+      prerelease:
+        description: This is a prerelease
+        type: boolean
+        default: false
+      prerelease-str:
+        description: Prerelease suffix
+        type: string
+        default: ""
+       
+defaults:
+  run:
+    shell: pwsh
+
+env:
+  DOTNET_TELEMETRY_OPTOUT: ttrue
+  DOTNET_NOLOGO: true
+  NUGET_PACKAGES: ${{github.workspace}}/artifacts/pkg
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }} 
+  cancel-in-progress: true
+
+jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    outputs:
+      ver: ${{ steps.computever.outputs.ver }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Get Version
+      id: computever
+      run: |
+        $ver = ([xml](Get-Content Version.props)).Project.PropertyGroup.VersionPrefix;
+        $suffix = "${{ inputs.prerelease && format('-{0}', inputs.prerelease_str) || '' }}"
+        echo "ver=$($ver).$($suffix)" >> $env:GITHUB_OUTPUT
+
+  build:
+    needs: [setup]
+    if: needs.setup.outputs.should_skip != 'true'
+    name: 'Build ${{ needs.setup.outputs.ver }}'
+    uses: ./.github/workflows/build.yml
+    with:
+      version: ${{ inputs.prerelease-str }}
+      no-suffix: ${{ !inputs.prerelease }}
+
+  upload:
+    needs: [setup, build]
+    if: '!inputs.dryrun'
+    name: Upload Packages
+    uses: ./.github/workflows/upload-packages.yml
+    with:
+      workflow-id: ${{ github.run_id }}
+      nuget-url: nuget.org
+    secrets:
+      nuget-key: ${{ secrets.NUGET_PUSH_KEY }}
+
+  bump-ver:
+    name: Bump versions
+    needs: [setup, build]
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    # first, make release/tag
+    - name: Download compiled packages
+      uses: actions/download-artifact@v4
+      with:
+        name: packages
+        path: artifacts/package/release/
+        github-token: ${{ github.token }}
+        run-id: ${{ github.run_id }}
+    - name: Create release
+      uses: softprops/action-gh-release@v2
+      if: '!inputs.dryrun'
+      with:
+        files: artifacts/packate/release/*.nupkg
+        tag_name: v${{ needs.setup.outputs.ver }}
+        prerelease: ${{ inputs.prerelease }}
+
+    # then, bump the version (if appropriate)
+    - name: Update version
+      if: '!inputs.prerelease'
+      run: ./tools/bump_version.ps1 -BumpVersion ${{ inputs.bumpkind }}
+    - name: Commit updated version
+      if: '!inputs.prerelease'
+      uses: EndBug/add-and-commit@v9
+      with:
+        add: Version.props
+        message: "[BOT]: Bump version after ${{ needs.setup.outputs.ver }}"
+        committer_name: GitHub Actions
+        committer_email: 41898282+github-actions[bot]@users.noreply.github.com
+        push: ${{ !inputs.dryrun }}
+        pathspec_error_handling: exitAtEnd

@@ -4,7 +4,6 @@
   <PropertyGroup>
     <PackageId>$(MSBuildProjectName)</PackageId>
     <Authors>0x0ade, DaNike</Authors> <!-- Note: With dotnet pack, <Authors> is also the list of owners. -->
-    <VersionPrefix>2.0.0</VersionPrefix>
     <!--<PackageValidationBaselineVersion>2.0.0</PackageValidationBaselineVersion>-->
     <VersionSuffix Condition="'$(VersionSuffix)' == '' and '$(DoNotAddSuffix)' == ''">alpha.dev</VersionSuffix>
     
@@ -22,6 +21,8 @@
     <NuGetAudit>false</NuGetAudit> <!-- This just warns us for NETCoreApp 2.1.0 (which is wrong, anyway), and we're a compat-focused lib anyway. -->
   </PropertyGroup>
 
+  <Import Project="$(MSBuildThisFileDirectory)../Version.props"/>
+  
   <!-- We have literally no reason not to use SourceLink -->
   <PropertyGroup>
     <!-- https://github.com/dotnet/sourcelink -->

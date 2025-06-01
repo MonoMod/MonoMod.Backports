@@ -52,8 +52,8 @@ jobs:
       id: computever
       run: |
         $ver = ([xml](Get-Content Version.props)).Project.PropertyGroup.VersionPrefix;
-        $suffix = "${{ inputs.prerelease && format('-{0}', inputs.prerelease_str) || '' }}"
-        echo "ver=$($ver).$($suffix)" >> $env:GITHUB_OUTPUT
+        $suffix = "${{ inputs.prerelease && format('-{0}', inputs.prerelease-str) || '' }}"
+        echo "ver=$($ver)$($suffix)" >> $env:GITHUB_OUTPUT
 
   build:
     needs: [setup]

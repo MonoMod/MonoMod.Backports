@@ -76,10 +76,14 @@ namespace System.Collections.Concurrent
 #if HAS_TRYREMOVE_KVP
             return dict.TryRemove(item);
 #else
-            if (dict.TryRemove(item.Key, out var value)) {
-                if (EqualityComparer<TValue>.Default.Equals(item.Value, value)) {
+            if (dict.TryRemove(item.Key, out var value))
+            {
+                if (EqualityComparer<TValue>.Default.Equals(item.Value, value))
+                {
                     return true;
-                } else {
+                }
+                else
+                {
                     _ = dict.AddOrUpdate(item.Key, _ => value, (_, _) => value);
                     return false;
                 }

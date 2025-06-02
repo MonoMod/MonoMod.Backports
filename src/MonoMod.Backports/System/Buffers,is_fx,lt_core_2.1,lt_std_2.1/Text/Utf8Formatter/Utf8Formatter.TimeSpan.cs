@@ -74,7 +74,7 @@ namespace System.Buffers.Text
                 fraction = (uint)fraction64;
             }
 
-AfterComputeFraction:
+            AfterComputeFraction:
 
             int fractionDigits = 0;
             if (symbol == 'c')

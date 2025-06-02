@@ -97,4 +97,4 @@ public static class ArgumentOutOfRangeExceptionEx
         if (value <= 0) ThrowNegativeOrZero(paramName, value);
     }
 #endif
-    }
+}

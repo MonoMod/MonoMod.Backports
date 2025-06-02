@@ -45,7 +45,8 @@ namespace System.Runtime.CompilerServices
     public static class ConditionalWeakTableExtensions
     {
 #if CWT_NOT_ENUMERABLE
-        private static class CWTInfoHolder<TKey, TValue> where TKey : class where TValue : class? {
+        private static class CWTInfoHolder<TKey, TValue> where TKey : class where TValue : class?
+        {
             private static readonly MethodInfo? get_KeysMethod;
             public static readonly GetKeys? get_Keys;
 
@@ -53,10 +54,12 @@ namespace System.Runtime.CompilerServices
 
             [SuppressMessage("Performance", "CA1810:Initialize reference type static fields inline",
                 Justification = "There are no methods which would get any performance impact.")]
-            static CWTInfoHolder() {
+            static CWTInfoHolder()
+            {
                 get_KeysMethod = typeof(ConditionalWeakTable<TKey, TValue>).GetProperty("Keys", BindingFlags.NonPublic | BindingFlags.Instance)?.GetGetMethod(nonPublic: true);
-                if (get_KeysMethod is not null) {
-                    get_Keys = (GetKeys) Delegate.CreateDelegate(typeof(GetKeys), get_KeysMethod);
+                if (get_KeysMethod is not null)
+                {
+                    get_Keys = (GetKeys)Delegate.CreateDelegate(typeof(GetKeys), get_KeysMethod);
                 }
             }
         }
@@ -100,16 +103,22 @@ namespace System.Runtime.CompilerServices
                 throw new PlatformNotSupportedException("This version of MonoMod.Backports was built targeting a version of the framework " +
                     "where ConditionalWeakTable is enumerable, but it isn't!");
 #else
-                if (CWTInfoHolder<TKey, TValue>.get_Keys is { } getKeys) {
+                if (CWTInfoHolder<TKey, TValue>.get_Keys is { } getKeys)
+                {
                     return Enumerate(self, getKeys(self));
-                    static IEnumerator<KeyValuePair<TKey, TValue>> Enumerate(ConditionalWeakTable<TKey, TValue> cwt, IEnumerable<TKey> keys) {
-                        foreach (var key in keys) {
-                            if (cwt.TryGetValue(key, out TValue? value)) {
+                    static IEnumerator<KeyValuePair<TKey, TValue>> Enumerate(ConditionalWeakTable<TKey, TValue> cwt, IEnumerable<TKey> keys)
+                    {
+                        foreach (var key in keys)
+                        {
+                            if (cwt.TryGetValue(key, out TValue? value))
+                            {
                                 yield return new KeyValuePair<TKey, TValue>(key, value);
                             }
                         }
                     }
-                } else {
+                }
+                else
+                {
                     throw new PlatformNotSupportedException("Could not get Keys property of ConditionalWeakTable to enumerate it");
                 }
 #endif
@@ -122,9 +131,10 @@ namespace System.Runtime.CompilerServices
 #if HAS_CWT_CLEAR
             self.Clear();
 #else
-            foreach (var kvp in self) {
+            foreach (var kvp in self)
+            {
                 self.Remove(kvp.Key);
-            } 
+            }
 #endif
         }
 

@@ -64,7 +64,7 @@ namespace System.Buffers.Text
                     goto FalseExit; // Overflow
             }
 
-FractionalPartWithoutLeadingDigits: // If we got here, we found a decimal point before we found any digits. This is legal as long as there's at least one zero after the decimal point.
+            FractionalPartWithoutLeadingDigits: // If we got here, we found a decimal point before we found any digits. This is legal as long as there's at least one zero after the decimal point.
             answer = 0;
             index++;
             if ((uint)index >= (uint)source.Length)
@@ -72,7 +72,7 @@ FractionalPartWithoutLeadingDigits: // If we got here, we found a decimal point 
             if (source[index] != '0')
                 goto FalseExit;
 
-FractionalDigits: // "N" format allows a fractional portion despite being an integer format but only if the post-fraction digits are all 0.
+            FractionalDigits: // "N" format allows a fractional portion despite being an integer format but only if the post-fraction digits are all 0.
             do
             {
                 index++;
@@ -86,12 +86,12 @@ FractionalDigits: // "N" format allows a fractional portion despite being an int
                 goto FalseExit; // The fractional portion contained a non-zero digit. Treat this as an error, not an early termination.
             goto Done;
 
-FalseExit:
+            FalseExit:
             bytesConsumed = default;
             value = default;
             return false;
 
-Done:
+            Done:
             bytesConsumed = index;
             value = (sbyte)(answer * sign);
             return true;
@@ -156,7 +156,7 @@ Done:
                     goto FalseExit; // Overflow
             }
 
-FractionalPartWithoutLeadingDigits: // If we got here, we found a decimal point before we found any digits. This is legal as long as there's at least one zero after the decimal point.
+            FractionalPartWithoutLeadingDigits: // If we got here, we found a decimal point before we found any digits. This is legal as long as there's at least one zero after the decimal point.
             answer = 0;
             index++;
             if ((uint)index >= (uint)source.Length)
@@ -164,7 +164,7 @@ FractionalPartWithoutLeadingDigits: // If we got here, we found a decimal point 
             if (source[index] != '0')
                 goto FalseExit;
 
-FractionalDigits: // "N" format allows a fractional portion despite being an integer format but only if the post-fraction digits are all 0.
+            FractionalDigits: // "N" format allows a fractional portion despite being an integer format but only if the post-fraction digits are all 0.
             do
             {
                 index++;
@@ -178,12 +178,12 @@ FractionalDigits: // "N" format allows a fractional portion despite being an int
                 goto FalseExit; // The fractional portion contained a non-zero digit. Treat this as an error, not an early termination.
             goto Done;
 
-FalseExit:
+            FalseExit:
             bytesConsumed = default;
             value = default;
             return false;
 
-Done:
+            Done:
             bytesConsumed = index;
             value = (short)(answer * sign);
             return true;
@@ -251,7 +251,7 @@ Done:
                     goto FalseExit; // Overflow
             }
 
-FractionalPartWithoutLeadingDigits: // If we got here, we found a decimal point before we found any digits. This is legal as long as there's at least one zero after the decimal point.
+            FractionalPartWithoutLeadingDigits: // If we got here, we found a decimal point before we found any digits. This is legal as long as there's at least one zero after the decimal point.
             answer = 0;
             index++;
             if ((uint)index >= (uint)source.Length)
@@ -259,7 +259,7 @@ FractionalPartWithoutLeadingDigits: // If we got here, we found a decimal point 
             if (source[index] != '0')
                 goto FalseExit;
 
-FractionalDigits: // "N" format allows a fractional portion despite being an integer format but only if the post-fraction digits are all 0.
+            FractionalDigits: // "N" format allows a fractional portion despite being an integer format but only if the post-fraction digits are all 0.
             do
             {
                 index++;
@@ -273,12 +273,12 @@ FractionalDigits: // "N" format allows a fractional portion despite being an int
                 goto FalseExit; // The fractional portion contained a non-zero digit. Treat this as an error, not an early termination.
             goto Done;
 
-FalseExit:
+            FalseExit:
             bytesConsumed = default;
             value = default;
             return false;
 
-Done:
+            Done:
             bytesConsumed = index;
             value = answer * sign;
             return true;
@@ -346,7 +346,7 @@ Done:
                     goto FalseExit; // Overflow
             }
 
-FractionalPartWithoutLeadingDigits: // If we got here, we found a decimal point before we found any digits. This is legal as long as there's at least one zero after the decimal point.
+            FractionalPartWithoutLeadingDigits: // If we got here, we found a decimal point before we found any digits. This is legal as long as there's at least one zero after the decimal point.
             answer = 0;
             index++;
             if ((uint)index >= (uint)source.Length)
@@ -354,7 +354,7 @@ FractionalPartWithoutLeadingDigits: // If we got here, we found a decimal point 
             if (source[index] != '0')
                 goto FalseExit;
 
-FractionalDigits: // "N" format allows a fractional portion despite being an integer format but only if the post-fraction digits are all 0.
+            FractionalDigits: // "N" format allows a fractional portion despite being an integer format but only if the post-fraction digits are all 0.
             do
             {
                 index++;
@@ -368,12 +368,12 @@ FractionalDigits: // "N" format allows a fractional portion despite being an int
                 goto FalseExit; // The fractional portion contained a non-zero digit. Treat this as an error, not an early termination.
             goto Done;
 
-FalseExit:
+            FalseExit:
             bytesConsumed = default;
             value = default;
             return false;
 
-Done:
+            Done:
             bytesConsumed = index;
             value = answer * sign;
             return true;

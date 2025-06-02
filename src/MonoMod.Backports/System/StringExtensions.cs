@@ -23,9 +23,11 @@ namespace System
             var ish = new DefaultInterpolatedStringHandler(oldValue.Length, 0);
             var from = self.AsSpan();
             var old = oldValue.AsSpan();
-            while (true) {
+            while (true)
+            {
                 var idx = from.IndexOf(old, comparison);
-                if (idx < 0) {
+                if (idx < 0)
+                {
                     ish.AppendFormatted(from);
                     break;
                 }

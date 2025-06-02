@@ -33,15 +33,20 @@ namespace System.IO
 
             var buf = ArrayPool<byte>.Shared.Rent(bufferSize);
 
-            try {
+            try
+            {
                 int read;
-                do {
+                do
+                {
                     read = src.Read(buf, 0, buf.Length);
-                    if (read > 0) {
+                    if (read > 0)
+                    {
                         destination.Write(buf, 0, read);
                     }
                 } while (read > 0);
-            } finally {
+            }
+            finally
+            {
                 ArrayPool<byte>.Shared.Return(buf, true);
             }
 #endif

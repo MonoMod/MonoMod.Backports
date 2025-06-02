@@ -11,7 +11,7 @@ using Postprocess;
 if (args is not [
     var outputBackports,
     var backportsPath, var ilhelpersPath,
-    ..var referencePath
+    .. var referencePath
     ])
 {
     Console.Error.WriteLine("Assemblies not provided.");

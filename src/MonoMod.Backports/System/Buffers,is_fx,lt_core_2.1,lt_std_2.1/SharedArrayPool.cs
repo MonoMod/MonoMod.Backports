@@ -337,7 +337,7 @@ namespace System.Buffers
             }
             _partitions = partitions;
         }
-        
+
         // TODO: polyfill Thread.GetCurrentProcessorId() sanely and replace these 2 EnvironmentEx.CurrentManagedThreadId calls with it
 
         /// <summary>

@@ -81,7 +81,7 @@ public static class OperationCanceledExceptionEx
         {
         }
 
-        public WithCancellationToken(string? message, Exception? innerException,  CancellationToken token) : base(message, innerException)
+        public WithCancellationToken(string? message, Exception? innerException, CancellationToken token) : base(message, innerException)
         {
             CancellationToken = token;
         }

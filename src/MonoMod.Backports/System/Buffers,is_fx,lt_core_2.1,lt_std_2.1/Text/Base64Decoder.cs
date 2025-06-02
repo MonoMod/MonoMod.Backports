@@ -142,24 +142,24 @@ namespace System.Buffers.Text
             if (srcLength != utf8.Length)
                 goto InvalidExit;
 
-        DoneExit:
+            DoneExit:
             bytesConsumed = sourceIndex;
             bytesWritten = destIndex;
             return OperationStatus.Done;
 
-        DestinationSmallExit:
+            DestinationSmallExit:
             if (srcLength != utf8.Length && isFinalBlock)
                 goto InvalidExit; // if input is not a multiple of 4, and there is no more data, return invalid data instead
             bytesConsumed = sourceIndex;
             bytesWritten = destIndex;
             return OperationStatus.DestinationTooSmall;
 
-        NeedMoreExit:
+            NeedMoreExit:
             bytesConsumed = sourceIndex;
             bytesWritten = destIndex;
             return OperationStatus.NeedMoreData;
 
-        InvalidExit:
+            InvalidExit:
             bytesConsumed = sourceIndex;
             bytesWritten = destIndex;
             return OperationStatus.InvalidData;
@@ -271,11 +271,11 @@ namespace System.Buffers.Text
                 destIndex += 1;
             }
 
-        DoneExit:
+            DoneExit:
             bytesWritten = destIndex;
             return OperationStatus.Done;
 
-        InvalidExit:
+            InvalidExit:
             bytesWritten = destIndex;
             return OperationStatus.InvalidData;
         }

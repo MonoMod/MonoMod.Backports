@@ -83,12 +83,12 @@ namespace System.Buffers.Text
             bytesWritten = destIndex;
             return OperationStatus.Done;
 
-        NeedMoreDataExit:
+            NeedMoreDataExit:
             bytesConsumed = sourceIndex;
             bytesWritten = destIndex;
             return OperationStatus.NeedMoreData;
 
-        DestinationSmallExit:
+            DestinationSmallExit:
             bytesConsumed = sourceIndex;
             bytesWritten = destIndex;
             return OperationStatus.DestinationTooSmall;
@@ -168,7 +168,7 @@ namespace System.Buffers.Text
             bytesWritten = encodedLength;
             return OperationStatus.Done;
 
-        FalseExit:
+            FalseExit:
             bytesWritten = 0;
             return OperationStatus.DestinationTooSmall;
         }

@@ -114,7 +114,7 @@ foreach (var (pkgName, (_, fwks)) in packages)
                         builder?.Add(export);
                         return;
                     }
-                    
+
                     // if there are nested types, fall out so we can get ALL of them
                 }
 
@@ -197,7 +197,7 @@ foreach (var tfm in packageTfms)
         //RuntimeVersion = bclShim.RuntimeVersion
     };
     var assembly = new AssemblyDefinition(assemblyName,
-        new(1,0,0,0))
+        new(1, 0, 0, 0))
     {
         Modules = { module },
     };
@@ -229,7 +229,7 @@ foreach (var tfm in packageTfms)
         {
             // valuetuple is a bit special...
             if (export.FromPackage.Equals("system.valuetuple", StringComparison.OrdinalIgnoreCase)
-                && tfm is { Framework: ".NETFramework" } && tfm.Version >= new Version(4,7,1))
+                && tfm is { Framework: ".NETFramework" } && tfm.Version >= new Version(4, 7, 1))
             {
                 // on .NET Framework 4.7.1, System.ValueTuple was moved into mscorlib
                 impl = (IImplementation)module.CorLibTypeFactory.CorLibScope;

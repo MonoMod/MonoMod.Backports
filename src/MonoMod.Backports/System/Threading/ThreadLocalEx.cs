@@ -59,7 +59,7 @@ public static class ThreadLocalEx
     private static void ThrowTrackAllValuesNotSupported()
         => ThrowHelper.ThrowNotSupportedException("trackAllValues is not supported on this platform");
 #endif
-    
+
     public static bool SupportsAllValues
 #if HAS_ALLVALUES
         => true;

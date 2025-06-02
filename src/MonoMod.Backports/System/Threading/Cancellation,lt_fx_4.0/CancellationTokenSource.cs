@@ -117,7 +117,7 @@ namespace System.Threading
             }
         }
 
-        public const long MaxSupportedTimeout = uint.MaxValue - 8;
+        private const long MaxSupportedTimeout = uint.MaxValue - 8;
 
         /// <summary>Initializes the <see cref="CancellationTokenSource"/>.</summary>
         public CancellationTokenSource() { }
@@ -141,7 +141,7 @@ namespace System.Threading
         /// canceled already.
         /// </para>
         /// </remarks>
-        public CancellationTokenSource(TimeSpan delay)
+        internal CancellationTokenSource(TimeSpan delay)
         {
             long totalMilliseconds = (long)delay.TotalMilliseconds;
             if (totalMilliseconds < -1 || totalMilliseconds > MaxSupportedTimeout)
@@ -171,7 +171,7 @@ namespace System.Threading
         /// canceled already.
         /// </para>
         /// </remarks>
-        public CancellationTokenSource(int millisecondsDelay)
+        internal CancellationTokenSource(int millisecondsDelay)
         {
             if (millisecondsDelay < -1)
             {
@@ -366,7 +366,7 @@ namespace System.Threading
         /// <see cref="CancellationTokenSource"/>, if it has not been canceled already.
         /// </para>
         /// </remarks>
-        public void CancelAfter(TimeSpan delay)
+        internal void CancelAfter(TimeSpan delay)
         {
             long totalMilliseconds = (long)delay.TotalMilliseconds;
             if (totalMilliseconds < -1 || totalMilliseconds > MaxSupportedTimeout)
@@ -401,7 +401,7 @@ namespace System.Threading
         /// canceled already.
         /// </para>
         /// </remarks>
-        public void CancelAfter(int millisecondsDelay)
+        internal void CancelAfter(int millisecondsDelay)
         {
             if (millisecondsDelay < -1)
             {
@@ -473,7 +473,7 @@ namespace System.Threading
         /// thread-safe and may result in TryReset returning true even if cancellation was already requested and may result
         /// in registrations not being invoked as part of the concurrent cancellation request.
         /// </remarks>
-        public bool TryReset()
+        internal bool TryReset()
         {
             ThrowIfDisposed();
 
@@ -499,6 +499,7 @@ namespace System.Threading
             // Failed to reset.
             return false;
         }
+        // NOTE: ^^ added in .NET 6
 
         /// <summary>Releases the resources used by this <see cref="CancellationTokenSource" />.</summary>
         /// <remarks>This method is not thread-safe for any other concurrent calls.</remarks>
@@ -853,7 +854,7 @@ namespace System.Threading
         /// </summary>
         /// <param name="token">The <see cref="CancellationToken">CancellationToken</see> to observe.</param>
         /// <returns>A <see cref="CancellationTokenSource"/> that is linked to the source token.</returns>
-        public static CancellationTokenSource CreateLinkedTokenSource(CancellationToken token) =>
+        internal static CancellationTokenSource CreateLinkedTokenSource(CancellationToken token) =>
             token.CanBeCanceled ? new Linked1CancellationTokenSource(token) : new CancellationTokenSource();
 
         /// <summary>
@@ -875,7 +876,7 @@ namespace System.Threading
         /// </summary>
         /// <param name="tokens">The <see cref="CancellationToken">CancellationToken</see> instances to observe.</param>
         /// <returns>A <see cref="CancellationTokenSource"/> that is linked to the source tokens.</returns>
-        public static CancellationTokenSource CreateLinkedTokenSource(params ReadOnlySpan<CancellationToken> tokens)
+        internal static CancellationTokenSource CreateLinkedTokenSource(params ReadOnlySpan<CancellationToken> tokens)
         {
             return tokens.Length switch
             {

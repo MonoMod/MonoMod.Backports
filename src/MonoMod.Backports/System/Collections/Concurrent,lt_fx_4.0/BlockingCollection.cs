@@ -40,7 +40,7 @@ namespace System.Collections.Concurrent
     //[UnsupportedOSPlatform("browser")]
     [DebuggerTypeProxy(typeof(BlockingCollectionDebugView<>))]
     [DebuggerDisplay("Count = {Count}, Type = {_collection}")]
-    public class BlockingCollection<T> : IEnumerable<T>, ICollection, IDisposable, IReadOnlyCollection<T>
+    public class BlockingCollection<T> : IEnumerable<T>, ICollection, IDisposable //, IReadOnlyCollection<T>
     {
         private IProducerConsumerCollection<T> _collection;
         private int _boundedCapacity;

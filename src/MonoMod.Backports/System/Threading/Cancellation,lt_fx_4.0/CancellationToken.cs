@@ -27,7 +27,7 @@ namespace System.Threading
     /// </para>
     /// </remarks>
     [DebuggerDisplay("IsCancellationRequested = {IsCancellationRequested}")]
-    public readonly struct CancellationToken : IEquatable<CancellationToken>
+    public readonly struct CancellationToken //: IEquatable<CancellationToken>
     {
         // The backing TokenSource.
         // if null, it implicitly represents the same thing as new CancellationToken(false).
@@ -197,8 +197,9 @@ namespace System.Threading
         /// <param name="state">The state to pass to the <paramref name="callback"/> when the delegate is invoked.  This may be null.</param>
         /// <returns>The <see cref="CancellationTokenRegistration"/> instance that can be used to unregister the callback.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="callback"/> is null.</exception>
-        public CancellationTokenRegistration Register(Action<object?, CancellationToken> callback, object? state) =>
+        internal CancellationTokenRegistration Register(Action<object?, CancellationToken> callback, object? state) =>
             Register(callback, state, useSynchronizationContext: false, useExecutionContext: true);
+        // note: ^^ added in .NET 6
 
         /// <summary>
         /// Registers a delegate that will be called when this
@@ -247,8 +248,9 @@ namespace System.Threading
         /// <returns>The <see cref="CancellationTokenRegistration"/> instance that can
         /// be used to unregister the callback.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="callback"/> is null.</exception>
-        public CancellationTokenRegistration UnsafeRegister(Action<object?> callback, object? state) =>
+        internal CancellationTokenRegistration UnsafeRegister(Action<object?> callback, object? state) =>
             Register(callback, state, useSynchronizationContext: false, useExecutionContext: false);
+        // NOTE: ^^ added in .NET 5
 
         /// <summary>Registers a delegate that will be called when this <see cref="CancellationToken">CancellationToken</see> is canceled.</summary>
         /// <remarks>
@@ -259,8 +261,9 @@ namespace System.Threading
         /// <param name="state">The state to pass to the <paramref name="callback"/> when the delegate is invoked.  This may be null.</param>
         /// <returns>The <see cref="CancellationTokenRegistration"/> instance that can be used to unregister the callback.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="callback"/> is null.</exception>
-        public CancellationTokenRegistration UnsafeRegister(Action<object?, CancellationToken> callback, object? state) =>
+        internal CancellationTokenRegistration UnsafeRegister(Action<object?, CancellationToken> callback, object? state) =>
             Register(callback, state, useSynchronizationContext: false, useExecutionContext: false);
+        // NOTE: ^^ added in .NET 6
 
         /// <summary>
         /// Registers a delegate that will be called when this

@@ -204,12 +204,14 @@ namespace System
         /// <exception cref="ArgumentNullException">The <paramref name="info"/> argument is null.</exception>
         [Obsolete("Obsoletions.LegacyFormatterImplMessage")]
         [EditorBrowsable(EditorBrowsableState.Never)]
+#pragma warning disable CS0809 // Obsolete member overrides non-obsolete member
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
 
             info.AddValue("InnerExceptions", _innerExceptions, typeof(Exception[])); // Do not rename (binary serialization)
         }
+#pragma warning restore CS0809 // Obsolete member overrides non-obsolete member+
 
         /// <summary>
         /// Returns the <see cref="Exception"/> that is the root cause of this exception.

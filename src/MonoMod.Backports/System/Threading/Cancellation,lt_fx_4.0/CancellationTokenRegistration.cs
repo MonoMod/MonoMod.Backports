@@ -98,17 +98,19 @@ namespace System.Threading
         /// to <see cref="CancellationToken.Register"/> on a token that already had cancellation requested),
         /// this will return a default token.
         /// </remarks>
-        public CancellationToken Token =>
+        internal CancellationToken Token =>
             _node is CancellationTokenSource.CallbackNode node ?
                 new CancellationToken(node.Registrations.Source) : // avoid CTS.Token, which throws after disposal
                 default;
+        // NOTE: ^^ added in .NET 5
 
         /// <summary>
         /// Disposes of the registration and unregisters the target callback from the associated
         /// <see cref="CancellationToken">CancellationToken</see>.
         /// </summary>
-        public bool Unregister() =>
+        internal bool Unregister() =>
             _node is CancellationTokenSource.CallbackNode node && node.Registrations.Unregister(_id, node);
+        // NOTE: ^^ added in .NET 5
 
         /// <summary>
         /// Determines whether two <see

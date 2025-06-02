@@ -1,5 +1,5 @@
 name: Make Release
-run-name: ${{ inputs.dryrun && '(Dry Run) ' }}Make ${{ inputs.prerelease && format('prerelease with suffix \'{0}\'', inputs.prerelease-str) || 'release' }} on ${{ github.ref_name }}
+run-name: ${{ inputs.dryrun && '(Dry Run) ' }}Make ${{ inputs.prerelease && format('prerelease with suffix ''{0}''', inputs.prerelease-str) || 'release' }} on ${{ github.ref_name }}
 
 on:
   workflow_dispatch:

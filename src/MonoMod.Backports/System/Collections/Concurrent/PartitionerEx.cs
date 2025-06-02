@@ -27,7 +27,7 @@ namespace System.Collections.Concurrent
             /// The ordering used in the created partitioner is determined by the natural order of the elements
             /// as retrieved from the source enumerable.
             /// </remarks>
-            internal static OrderablePartitioner<TSource> Create<TSource>(IEnumerable<TSource> source, EnumerablePartitionerOptions partitionerOptions)
+            public static OrderablePartitioner<TSource> Create<TSource>(IEnumerable<TSource> source, EnumerablePartitionerOptions partitionerOptions)
             {
 #if HAS_ENUMERABLEPARTITIONEROPTIONS
                 return Partitioner.Create(source, partitionerOptions);

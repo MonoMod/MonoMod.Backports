@@ -90,7 +90,10 @@ foreach (var (pkgPath, libPath, framework, dllPath) in pkgList
 }
 
 // collect the list of ALL target frameworks that we might care about
-var targetTfms = fwReducer.ReduceEquivalent(packageLayout.Values.SelectMany(v => v.Keys)).ToArray();
+var targetTfms = fwReducer
+    .ReduceEquivalent(packageLayout.Values.SelectMany(v => v.Keys))
+    .Where(fwk => fwk.Framework is ".NETFramework" or ".NETStandard" or ".NETCoreApp") // filter to just the standard Frameworks, because AsmResolver can't handle all the wacko ones
+    .ToArray();
 
 // then build up a mapping of the source files for all of those TFMs
 var frameworkGroupLayout = new Dictionary<NuGetFramework, List<string>>();

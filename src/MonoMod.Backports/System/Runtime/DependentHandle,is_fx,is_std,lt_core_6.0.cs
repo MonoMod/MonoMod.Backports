@@ -24,7 +24,7 @@ namespace System.Runtime
         private sealed class DependentHolder : CriticalFinalizerObject
         {
             public GCHandle TargetHandle;
-            private IntPtr dependent;
+            private volatile IntPtr dependent;
 
             // TODO: figure out a way to make this handle a normal object reference, but prevent finalization of
             // referenced object when we resurrect
@@ -38,7 +38,8 @@ namespace System.Runtime
                     do
                     {
                         oldHandle = dependent;
-                    } while (Interlocked.CompareExchange(ref dependent, newHandle, oldHandle) == oldHandle);
+                    }
+                    while (Interlocked.CompareExchange(ref dependent, newHandle, oldHandle) != oldHandle);
                     GCHandle.FromIntPtr(oldHandle).Free();
                 }
             }

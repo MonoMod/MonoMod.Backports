@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Description>Shims for MonoMod.Backports to redirect </Description>
+    <Description>Shims for MonoMod.Backports to redirect certain OOB packages</Description>
   </PropertyGroup>
 
   <ItemGroup>

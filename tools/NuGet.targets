@@ -32,7 +32,8 @@
       </PropertyGroup>
 
       <ItemGroup>
-        <None Include="$(_PackageReadmePath)" Link="README.md" PackagePath="README.md" />
+        <None Include="$(_PackageReadmePath)" Link="README.md" />
+        <PackageFile Include="$(_PackageReadmePath)" PackagePath="README.md" />
       </ItemGroup>
     </When>
   </Choose>

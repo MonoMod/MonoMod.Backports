@@ -7,8 +7,8 @@ it will use the library features actually provided by the runtime.
 
 ## Notable APIs
 
-- `MonoMod.Backports.MethodImplOptionsEx` - This can be used everywhere in a project with
+- `System.MethodImplOptionsEx` - This can be used everywhere in a project with
 
   ```cs
-  global using MethodImplOptions = MonoMod.Backports.MethodImplOptionsEx;
+  global using MethodImplOptions = System.MethodImplOptionsEx;
   ```

@@ -108,7 +108,7 @@ jobs:
       uses: softprops/action-gh-release@v2
       if: '!inputs.dryrun'
       with:
-        files: artifacts/packate/release/*.nupkg
+        files: artifacts/package/release/*.nupkg
         tag_name: v${{ needs.setup.outputs.ver }}
         prerelease: ${{ inputs.prerelease }}
 

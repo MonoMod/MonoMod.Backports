@@ -323,10 +323,12 @@ namespace System.Threading
                     {
                         spinner.SpinOnce(sleep1Threshold: -1);
 
+#pragma warning disable CA1508 // m_currentCount is volatile, and will be written to by another thread.
                         if (m_currentCount != 0)
                         {
                             break;
                         }
+#pragma warning restore CA1508 // Avoid dead conditional code
                     }
                 }
                 Monitor.Enter(m_lockObjAndDisposed, ref lockTaken);

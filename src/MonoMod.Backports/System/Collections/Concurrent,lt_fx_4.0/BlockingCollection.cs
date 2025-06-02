@@ -48,8 +48,10 @@ namespace System.Collections.Concurrent
         private SemaphoreSlim? _freeNodes;
         private SemaphoreSlim _occupiedNodes;
         private bool _isDisposed;
+#pragma warning disable CA2213
         private CancellationTokenSource _consumersCancellationTokenSource;
         private CancellationTokenSource _producersCancellationTokenSource;
+#pragma warning restore CA2213
 
         private volatile int _currentAdders;
         private const int COMPLETE_ADDING_ON_MASK = unchecked((int)0x80000000);
@@ -506,9 +508,8 @@ namespace System.Collections.Concurrent
         /// <remarks>A call to <see cref="Take()"/> may block until an item is available to be removed.</remarks>
         public T Take()
         {
-            T? item;
 
-            if (!TryTake(out item, Timeout.Infinite, CancellationToken.None))
+            if (!TryTake(out var item, Timeout.Infinite, CancellationToken.None))
             {
                 throw new InvalidOperationException("BlockingCollection_CantTakeWhenDone");
             }
@@ -530,9 +531,8 @@ namespace System.Collections.Concurrent
         /// <remarks>A call to <see cref="Take(CancellationToken)"/> may block until an item is available to be removed.</remarks>
         public T Take(CancellationToken cancellationToken)
         {
-            T? item;
 
-            if (!TryTake(out item, Timeout.Infinite, cancellationToken))
+            if (!TryTake(out var item, Timeout.Infinite, cancellationToken))
             {
                 throw new InvalidOperationException("BlockingCollection_CantTakeWhenDone");
             }
@@ -640,10 +640,12 @@ namespace System.Collections.Concurrent
         /// <returns>False if the collection remained empty till the timeout period was exhausted. True otherwise.</returns>
         /// <exception cref="OperationCanceledException">If the <see cref="CancellationToken"/> is canceled.</exception>
         /// <exception cref="System.ObjectDisposedException">If the collection has been disposed.</exception>
+        [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "This is as it is in BCL source.")]
+        [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "Disposing is done correctly.")]
         private bool TryTakeWithNoTimeValidation([MaybeNullWhen(false)] out T item, int millisecondsTimeout, CancellationToken cancellationToken, CancellationTokenSource? combinedTokenSource)
         {
             CheckDisposed();
-            item = default(T)!;
+            item = default;
 
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -756,6 +758,7 @@ namespace System.Collections.Concurrent
         public static int AddToAny(BlockingCollection<T>[] collections, T item)
         {
 #if DEBUG
+            ArgumentNullException.ThrowIfNull(collections);
             int tryAddAnyReturnValue =
 #else
             return
@@ -798,6 +801,7 @@ namespace System.Collections.Concurrent
         public static int AddToAny(BlockingCollection<T>[] collections, T item, CancellationToken cancellationToken)
         {
 #if DEBUG
+            ArgumentNullException.ThrowIfNull(collections);
             int tryAddAnyReturnValue =
 #else
             return
@@ -859,6 +863,7 @@ namespace System.Collections.Concurrent
         /// 62 for STA and 63 for MTA.</exception>
         public static int TryAddToAny(BlockingCollection<T>[] collections, T item, TimeSpan timeout)
         {
+            ArgumentNullException.ThrowIfNull(collections);
             ValidateTimeout(timeout);
             return TryAddToAnyCore(collections, item, (int)timeout.TotalMilliseconds, CancellationToken.None);
         }
@@ -886,6 +891,7 @@ namespace System.Collections.Concurrent
         /// 62 for STA and 63 for MTA.</exception>
         public static int TryAddToAny(BlockingCollection<T>[] collections, T item, int millisecondsTimeout)
         {
+            ArgumentNullException.ThrowIfNull(collections);
             ValidateMillisecondsTimeout(millisecondsTimeout);
             return TryAddToAnyCore(collections, item, millisecondsTimeout, CancellationToken.None);
         }
@@ -918,6 +924,7 @@ namespace System.Collections.Concurrent
         /// 62 for STA and 63 for MTA.</exception>
         public static int TryAddToAny(BlockingCollection<T>[] collections, T item, int millisecondsTimeout, CancellationToken cancellationToken)
         {
+            ArgumentNullException.ThrowIfNull(collections);
             ValidateMillisecondsTimeout(millisecondsTimeout);
             return TryAddToAnyCore(collections, item, millisecondsTimeout, cancellationToken);
         }
@@ -965,8 +972,7 @@ namespace System.Collections.Concurrent
             // After WaitAny returns check if the token is cancelled and that caused the WaitAny to return or not
             // If the combined token is cancelled, this mean either the external token is cancelled then throw OCE
             // or one if the collection is AddingCompleted then throw AE
-            CancellationToken[] collatedCancellationTokens;
-            List<WaitHandle> handles = GetHandles(collections, externalCancellationToken, true, out collatedCancellationTokens);
+            List<WaitHandle> handles = GetHandles(collections, externalCancellationToken, true, out var collatedCancellationTokens);
 
             //Loop until one of these conditions is met:
             // 1- The operation is succeeded
@@ -1043,6 +1049,7 @@ namespace System.Collections.Concurrent
         /// <param name="isAddOperation">True if Add or TryAdd, false if Take or TryTake</param>
         /// <param name="cancellationTokens">Complete list of cancellationTokens to observe</param>
         /// <returns>The collections wait handles</returns>
+        [SuppressMessage("Design", "CA1068:CancellationToken parameters must come last", Justification = "Cancellation token is not used in the standard way.")]
         private static List<WaitHandle> GetHandles(BlockingCollection<T>[] collections, CancellationToken externalCancellationToken, bool isAddOperation, out CancellationToken[] cancellationTokens)
         {
             Debug.Assert(collections != null);
@@ -1162,6 +1169,7 @@ namespace System.Collections.Concurrent
         /// <remarks>A call to TakeFromAny may block until an item is available to be removed.</remarks>
         public static int TakeFromAny(BlockingCollection<T>[] collections, out T? item, CancellationToken cancellationToken)
         {
+            ArgumentNullException.ThrowIfNull(collections);
             int returnValue = TryTakeFromAnyCore(collections, out item, Timeout.Infinite, true, cancellationToken);
             Debug.Assert(returnValue >= 0 && returnValue < collections.Length,
                          "TryTakeFromAny() was expected to return an index within the bounds of the collections array.");
@@ -1221,6 +1229,7 @@ namespace System.Collections.Concurrent
         /// <remarks>A call to TryTakeFromAny may block until an item is available to be removed.</remarks>
         public static int TryTakeFromAny(BlockingCollection<T>[] collections, out T? item, TimeSpan timeout)
         {
+            ArgumentNullException.ThrowIfNull(collections);
             ValidateTimeout(timeout);
             return TryTakeFromAnyCore(collections, out item, (int)timeout.TotalMilliseconds, false, CancellationToken.None);
         }
@@ -1251,6 +1260,7 @@ namespace System.Collections.Concurrent
         /// <remarks>A call to TryTakeFromAny may block until an item is available to be removed.</remarks>
         public static int TryTakeFromAny(BlockingCollection<T>[] collections, out T? item, int millisecondsTimeout)
         {
+            ArgumentNullException.ThrowIfNull(collections);
             ValidateMillisecondsTimeout(millisecondsTimeout);
             return TryTakeFromAnyCore(collections, out item, millisecondsTimeout, false, CancellationToken.None);
         }
@@ -1285,6 +1295,7 @@ namespace System.Collections.Concurrent
         /// <remarks>A call to TryTakeFromAny may block until an item is available to be removed.</remarks>
         public static int TryTakeFromAny(BlockingCollection<T>[] collections, out T? item, int millisecondsTimeout, CancellationToken cancellationToken)
         {
+            ArgumentNullException.ThrowIfNull(collections);
             ValidateMillisecondsTimeout(millisecondsTimeout);
             return TryTakeFromAnyCore(collections, out item, millisecondsTimeout, false, cancellationToken);
         }
@@ -1369,8 +1380,7 @@ namespace System.Collections.Concurrent
                 // After WaitAny returns check if the token is cancelled and that caused the WaitAny to return or not
                 // If the combined token is cancelled, this mean either the external token is cancelled then throw OCE
                 // or one if the collection is Completed then exclude it and retry
-                CancellationToken[] collatedCancellationTokens;
-                List<WaitHandle> handles = GetHandles(collections, externalCancellationToken, false, out collatedCancellationTokens);
+                List<WaitHandle> handles = GetHandles(collections, externalCancellationToken, false, out var collatedCancellationTokens);
 
                 if (handles.Count == 0 && isTakeOperation) //case#5
                     throw new ArgumentException("BlockingCollection_CantTakeAnyWhenAllDone", nameof(collections));
@@ -1418,7 +1428,7 @@ namespace System.Collections.Concurrent
                     timeout = UpdateTimeOut(startTime, millisecondsTimeout);
             }
 
-            item = default(T)!; //case#2
+            item = default!; //case#2
             return OPERATION_FAILED;
         }
 

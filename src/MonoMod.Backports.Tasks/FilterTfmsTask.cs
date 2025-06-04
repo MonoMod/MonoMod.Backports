@@ -80,7 +80,7 @@ namespace MonoMod.Backports.Tasks
                         };
                         if (maybeOp is not { } op)
                         {
-                            LogError(filename, $"Unknown operation '{opStr}'");
+                            LogError(filename, $"Unknown operation '{opStr}' in '{part}'");
                             continue;
                         }
 

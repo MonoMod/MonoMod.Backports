@@ -77,7 +77,7 @@
       <_PPArguments Include="%(_ShimmedPackages.PkgPath)" />
     </ItemGroup>
 
-    <Exec ConsoleToMsBuild="true" LogStandardErrorAsError="true"
+    <Exec ConsoleToMsBuild="true" LogStandardErrorAsError="false"
       Command="&quot;$(_ShimgenExe)&quot; @(_PPArguments->'&quot;%(Identity)&quot;',' ')">
       <Output TaskParameter="ExitCode" PropertyName="_ExitCode" />
       <Output TaskParameter="ConsoleOutput" ItemName="_ShimGenOutput" />

@@ -3,10 +3,14 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Builder;
 using AsmResolver.DotNet.Serialized;
 using AsmResolver.IO;
+using AsmResolver.PE;
+using AsmResolver.PE.Builder;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using AsmResolver.PE.DotNet.StrongName;
+using AsmResolver.PE.File;
 using NuGet.Frameworks;
 using ShimGen;
+using System.Diagnostics.CodeAnalysis;
 
 if (args is not [
     var outputRefDir,
@@ -57,7 +61,7 @@ var fwReducer = new FrameworkReducer();
 // first, arrange the lookups in a reasonable manner
 // pkgPath -> framework -> dllPaths
 var packageLayout = new Dictionary<string, Dictionary<NuGetFramework, List<(string dllPath, string dllName)>>>();
-var dllsByDllName = new Dictionary<string, List<string>>();
+var dllsByDllName = new Dictionary<string, Dictionary<NuGetFramework, string>>();
 foreach (var (pkgPath, libPath, framework, dllPath) in pkgList
     .SelectMany(ta
         => ta.Item2.SelectMany(tb
@@ -86,7 +90,7 @@ foreach (var (pkgPath, libPath, framework, dllPath) in pkgList
         dllsByDllName.Add(dllName, dllPathList = new());
     }
 
-    dllPathList.Add(dllPath);
+    dllPathList.Add(framework, dllPath);
 }
 
 // collect the list of ALL target frameworks that we might care about
@@ -96,7 +100,7 @@ var targetTfms = fwReducer
     .ToArray();
 
 // then build up a mapping of the source files for all of those TFMs
-var frameworkGroupLayout = new Dictionary<NuGetFramework, List<string>>();
+var frameworkGroupLayout = new Dictionary<NuGetFramework, List<(string dllName, string assemblyFullName)>>();
 foreach (var tfm in targetTfms)
 {
     if (!frameworkGroupLayout.TryGetValue(tfm, out var list))
@@ -106,12 +110,22 @@ foreach (var tfm in targetTfms)
 
     foreach (var (pkgPath, pkgFwks) in packageLayout)
     {
-        var bestTfm = fwReducer.GetNearest(tfm, pkgFwks.Keys);
-        if (bestTfm is not null)
+        if (TryGetFrameworkKey(pkgFwks, tfm, fwReducer, out var dlls))
         {
-            foreach (var (_, dllName) in pkgFwks[bestTfm])
+            foreach (var (dllPath, _) in dlls)
             {
-                list.Add(dllName);
+                var assembly = AssemblyDefinition.FromFile(dllPath);
+                if (assembly.Name == "System.Runtime.CompilerServices.Unsafe")
+                {
+                    // For SRCS.Unsafe, we switch to using inbox on net6, BEFORE it's moved into System.Runtime (which happened net7).
+                    // As such, we want to make sure we DO NOT record SRCS.Unsafe for net6.
+                    if (tfm.Framework == ".NETCoreApp" && tfm.Version is { Major: 6, Minor: 0 })
+                    {
+                        continue;
+                    }
+                }
+                // We include FullName here so that if the string name key changes (for some reason) we handle it properly
+                list.Add((Path.GetFileName(dllPath), assembly.FullName));
             }
         }
     }
@@ -126,7 +140,7 @@ var precSorter = new FrameworkPrecedenceSorter(DefaultFrameworkNameProvider.Inst
 // for each (particularly net35), but if we just pick the overall minimum (netstandard2.0), net35 would be preferred
 // for all .NET Framework targets, even the ones that support NS2.0.
 var frameworkAssemblies = frameworkGroupLayout
-    .GroupBy(kvp => kvp.Value, SequenceEqualityComparer<string>.Instance)
+    .GroupBy(kvp => kvp.Value, SequenceEqualityComparer<(string, string)>.Instance)
     .SelectMany(g =>
         g.Select(kvp => kvp.Key)
             .GroupBy(tfm => tfm.Framework)
@@ -140,7 +154,7 @@ var frameworkAssemblies = frameworkGroupLayout
 var importedSet = new Dictionary<string, ExportedType>();
 foreach (var (targetTfm, assemblies) in frameworkAssemblies)
 {
-    foreach (var dllName in assemblies)
+    foreach (var (dllName, _) in assemblies)
     {
         importedSet.Clear();
 
@@ -148,34 +162,35 @@ foreach (var (targetTfm, assemblies) in frameworkAssemblies)
         AssemblyDefinition? backportsShimAssembly = null;
         AssemblyReference? backportsReference = null;
 
-        foreach (var bclShimPath in dllsByDllName[dllName])
+        var bclShimPath = GetFrameworkKey(dllsByDllName[dllName], targetTfm, fwReducer);
+
+        var bclShim = ModuleDefinition.FromFile(bclShimPath, readerParams);
+
+        var bcl = KnownCorLibs.FromRuntimeInfo(
+            DotNetRuntimeInfo.Parse(
+                targetTfm.GetDotNetFrameworkName(DefaultFrameworkNameProvider.Instance)));
+
+        // set up the new shim module
+        backportsShim = new ModuleDefinition(bclShim.Name, bcl)
         {
-            var bclShim = ModuleDefinition.FromFile(bclShimPath, readerParams);
+            RuntimeVersion = bclShim.RuntimeVersion
+        };
+        backportsShimAssembly = new AssemblyDefinition(bclShim.Assembly!.Name,
+            new(bclShim.Assembly!.Version.Major, 9999, 9999, 9999))
+        {
+            Modules = { backportsShim },
+            HashAlgorithm = bclShim.Assembly!.HashAlgorithm,
+            PublicKey = bclShim.Assembly!.PublicKey,
+            HasPublicKey = bclShim.Assembly!.HasPublicKey,
+        };
 
-            if (peImageBuilder is null || backportsShim is null || backportsShimAssembly is null || backportsReference is null)
-            {
-                var bcl = KnownCorLibs.FromRuntimeInfo(
-                    DotNetRuntimeInfo.Parse(
-                        targetTfm.GetDotNetFrameworkName(DefaultFrameworkNameProvider.Instance)));
+        backportsReference =
+            new AssemblyReference("MonoMod.Backports", new(1, 0, 0, 0))
+            .ImportWith(backportsShim.DefaultImporter);
 
-                // set up the new shim module
-                backportsShim = new ModuleDefinition(bclShim.Name, bcl)
-                {
-                    RuntimeVersion = bclShim.RuntimeVersion
-                };
-                backportsShimAssembly = new AssemblyDefinition(bclShim.Assembly!.Name,
-                    new(bclShim.Assembly!.Version.Major, 9999, 9999, 9999))
-                {
-                    Modules = { backportsShim },
-                    HashAlgorithm = bclShim.Assembly!.HashAlgorithm,
-                    PublicKey = bclShim.Assembly!.PublicKey,
-                    HasPublicKey = bclShim.Assembly!.HasPublicKey,
-                };
-
-                backportsReference =
-                    new AssemblyReference("MonoMod.Backports", new(1, 0, 0, 0))
-                    .ImportWith(backportsShim.DefaultImporter);
-            }
+        foreach (var file in dllsByDllName[dllName].Values)
+        {
+            bclShim = ModuleDefinition.FromFile(file, readerParams);
 
             // go through all public types, make sure they exist in the shim, and generate the forwarder
             foreach (var type in bclShim.TopLevelTypes)
@@ -223,7 +238,11 @@ foreach (var (targetTfm, assemblies) in frameworkAssemblies)
             var keyPath = Path.Combine(snkPath, name + ".snk");
             if (!File.Exists(keyPath))
             {
-                Console.Error.WriteLine($"ShimGen : warning : Missing SNK file for key {name} (for {backportsShim.Name})");
+                Console.Error.WriteLine($"ShimGen : warning : Missing SNK file for key {name} (for {backportsShim.Name}), fakesigning");
+                var pefile = PEFile.FromFile(newShimPath);
+                var image = PEImage.FromFile(pefile);
+                image.DotNetDirectory!.Flags |= AsmResolver.PE.DotNet.DotNetDirectoryFlags.StrongNameSigned;
+                image.ToPEFile(new ManagedPEFileBuilder(listener)).Write(newShimPath);
             }
             else
             {
@@ -239,3 +258,23 @@ foreach (var (targetTfm, assemblies) in frameworkAssemblies)
 }
 
 return 0;
+
+static bool TryGetFrameworkKey<T>(Dictionary<NuGetFramework, T> dict, NuGetFramework key, FrameworkReducer reducer, [MaybeNullWhen(false)] out T value)
+{
+    var best = reducer.GetNearest(key, dict.Keys);
+    if (best is null)
+    {
+        value = default;
+        return false;
+    }
+
+    return dict.TryGetValue(best, out value);
+}
+
+
+static T GetFrameworkKey<T>(Dictionary<NuGetFramework, T> dict, NuGetFramework key, FrameworkReducer reducer)
+{
+    var best = reducer.GetNearest(key, dict.Keys);
+    return dict[best!];
+}
+

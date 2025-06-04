@@ -49,14 +49,23 @@ var packages = dotnetOobPackagePaths
                 .ToDictionary(t => t.fwk, t => t.files)))
     .ToDictionary(t => t.name, t => (t.path, t.fwks));
 
-// load available shims (by name)
-var shimsByName = Directory.EnumerateFiles(shimsDir, "*.dll", new EnumerationOptions() { RecurseSubdirectories = true })
+// load available shims
+var allShimDlls = Directory.EnumerateFiles(shimsDir, "*.dll", new EnumerationOptions() { RecurseSubdirectories = true })
     .Where(f => Path.GetDirectoryName(f) != shimsDir)
     .Select(f => (path: f, name: Path.GetFileName(f), fwk: NuGetFramework.ParseFolder(Path.GetFileName(Path.GetDirectoryName(f))!)))
+    .ToArray();
+
+var shimsByName = allShimDlls
     .GroupBy(t => t.name)
     .ToDictionary(
         g => g.Key,
         g => g.ToDictionary(t => t.fwk, t => t.path));
+
+var shimsByTfm = allShimDlls
+    .GroupBy(t => t.fwk)
+    .ToDictionary(
+        g => g.Key,
+        g => g.ToDictionary(t => t.name, t => t.path));
 
 
 // load our tfm list
@@ -235,6 +244,13 @@ foreach (var tfm in packageTfms)
                 impl = (IImplementation)module.CorLibTypeFactory.CorLibScope;
             }
             else
+            if (export.FromPackage.Equals("system.runtime.compilerservices.unsafe", StringComparison.OrdinalIgnoreCase)
+                && tfm is { Framework: ".NETCoreApp" } && tfm.Version >= new Version(7, 0, 0))
+            {
+                // on .NET 7, System.Runtime.CompilerServices.Unsafe moved into System.Runtime
+                impl = (IImplementation)module.CorLibTypeFactory.CorLibScope;
+            }
+            else
             {
                 // the package provides something compatible with this TFM, reference the FromFile ref
                 impl = assemblyRefsByName[export.FromFile];
@@ -282,10 +298,11 @@ string GetReferencePathForTfm(NuGetFramework framework, bool useShim)
         // if we want to use shims instead, remap all of the files to use the shims
         if (useShim)
         {
+            var shimFilesDict = shimsByTfm[reducer.GetNearest(best, shimsByTfm.Keys)!];
             pkgFiles = pkgFiles
                 .Select(f => Path.GetFileName(f))
-                .Select(n => shimsByName[n])
-                .Select(dict => dict[reducer.GetNearest(best, dict.Keys)!]);
+                .Select(n => shimFilesDict.TryGetValue(n, out var v) ? v : null)
+                .Where(v => v is not null)!;
         }
 
         // then add them to the dll list

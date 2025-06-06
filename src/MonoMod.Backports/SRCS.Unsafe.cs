@@ -34,8 +34,7 @@ using System.Runtime.CompilerServices;
 
 namespace MonoMod.Backports.ILHelpers;
 
-[CLSCompliant(false)]
-public static unsafe class UnsafeRaw
+internal static unsafe class UnsafeRaw
 #else
 // SRCS.Unsafe is defined here, so we want to define Unsafe
 

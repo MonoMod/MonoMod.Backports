@@ -39,7 +39,7 @@ jobs:
   build:
     needs: [setup]
     if: needs.setup.outputs.should_skip != 'true'
-    name: 'Build #${{ needs.setup.outputs.ver }}'
+    name: Build
     uses: ./.github/workflows/build.yml
     with:
       version: daily.${{ needs.setup.outputs.ver }}
@@ -51,19 +51,3 @@ jobs:
     uses: ./.github/workflows/upload-packages.yml
     with:
       workflow-id: ${{ needs.setup.outputs.should_skip == 'true' && fromJSON(needs.setup.outputs.skipped_by).workflowId || github.run_id }}
-
-  report_check:
-    needs: [build]
-    if: always() && github.event_name != 'pull_request'
-    name: Report GitHub check
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      checks: write
-    steps:
-    - uses: LouisBrunner/checks-action@v2.0.0
-      if: always()
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        name: Build status
-        conclusion: ${{ needs.build.result }}

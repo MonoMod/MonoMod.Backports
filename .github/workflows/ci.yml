@@ -39,7 +39,7 @@ jobs:
   build:
     needs: [setup]
     if: needs.setup.outputs.should_skip != 'true'
-    name: 'Build #${{ needs.setup.outputs.ver }}'
+    name: Build
     uses: ./.github/workflows/build.yml
     with:
       version: daily.${{ needs.setup.outputs.ver }}

@@ -24,6 +24,11 @@ jobs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
       skipped_by: ${{ steps.skip_check.outputs.skipped_by }}
       ver: ${{ steps.computever.outputs.ver }}
+      checkid: ${{ steps.result_check.outpus.check_id }}
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
     steps:
     - name: Check if this run should be skipped
       id: skip_check
@@ -36,13 +41,41 @@ jobs:
       id: computever
       run: echo "ver=$(Get-Date -Format y.M.d).${{ github.run_number }}.${{ github.run_attempt }}" >> $env:GITHUB_OUTPUT
 
+    - name: Begin check
+      id: result_check
+      uses: LouisBrunner/checks-action@v2.0.0
+      if: github.event_name == 'pull_request'
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        name: Build Result
+        status: in_progress
+
   build:
     needs: [setup]
     if: needs.setup.outputs.should_skip != 'true'
-    name: Build
+    name: "Build #${{ needs.setup.outputs.ver }}"
     uses: ./.github/workflows/build.yml
     with:
       version: daily.${{ needs.setup.outputs.ver }}
+
+  finish_check:
+    needs: [setup, build]
+    if: always() && github.event_name == 'pull_request'
+    name: Finish check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
+    steps:
+    - name: Finish check
+      uses: LouisBrunner/checks-action@v2.0.0
+      if: github.event_name == 'pull_request'
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        check_id: ${{ needs.setup.outputs.checkid }}
+        status: completed
+        conclusion: ${{ needs.build.result }}
 
   upload:
     needs: [setup, build]

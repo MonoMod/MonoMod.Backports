@@ -24,6 +24,7 @@ jobs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
       skipped_by: ${{ steps.skip_check.outputs.skipped_by }}
       ver: ${{ steps.computever.outputs.ver }}
+      checkid: ${{ steps.result_check.outpus.check_id }}
     steps:
     - name: Check if this run should be skipped
       id: skip_check
@@ -39,7 +40,7 @@ jobs:
   build:
     needs: [setup]
     if: needs.setup.outputs.should_skip != 'true'
-    name: Build
+    name: "Build #${{ needs.setup.outputs.ver }}"
     uses: ./.github/workflows/build.yml
     with:
       version: daily.${{ needs.setup.outputs.ver }}

@@ -6,8 +6,6 @@ on:
       version:
         required: true
         type: string
-      version-raw:
-        type: string
       no-suffix:
         type: boolean
         default: false
@@ -25,7 +23,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: Build ${{ inputs.version-raw && format('#{0}', inputs.version-raw) || '' }}
+    name: Build
     env:
       VersionSuffix: ${{ !inputs.no-suffix && inputs.version }}
       DoNotAddSuffix: ${{ inputs.no-suffix && '1' }}

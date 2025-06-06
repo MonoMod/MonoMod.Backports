@@ -11,27 +11,9 @@
 #define FUNC_ASSEMBLY "CORE_ASSEMBLY"
 #endif
 
-.class public abstract auto ansi sealed beforefieldinit MonoMod.ILHelpers
+.class private abstract auto ansi sealed beforefieldinit MonoMod.ILHelpers
        extends [CORE_ASSEMBLY]System.Object
-{
-    .method public hidebysig static !!T TailCallDelegatePtr<T>(native int source) cil managed aggressiveinlining
-    {
-        .maxstack 8
-        ldarg.0
-        //tail. // The tail prefix on calli seems to be considered by many tools to be invalid.
-        calli !!T()
-        ret
-    } // end of method Unsafe::Read
-
-    .method public hidebysig static !!T TailCallFunc<T>(class [FUNC_ASSEMBLY]System.Func`1<!!T> func) cil managed aggressiveinlining
-    {
-        .maxstack 8
-        ldarg.0
-        tail.
-        callvirt instance !0 class [FUNC_ASSEMBLY]System.Func`1<!!T>::Invoke()
-        ret
-    }
-    
+{   
     .method public hidebysig static !!T& ObjectAsRef<T>(object obj) cil managed aggressiveinlining
     {
         .maxstack 1

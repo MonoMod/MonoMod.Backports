@@ -3,8 +3,6 @@
 
 #include "version.h"
 
-// We want to make sure to keep this named System.Runtime.CompilerServices.Unsafe so that runtimes, if they support it, can recognize this as intrinsics and make use of that
-
 // =============== CLASS MEMBERS DECLARATION ===================
 
 .assembly extern MonoMod.Backports { }
@@ -37,20 +35,16 @@
 #endif
 }
 
-.class extern forwarder MonoMod.Backports.ILHelpers.UnsafeRaw { .assembly extern MonoMod.Backports }
-
 #else
 
 // TODO: nullable annotations (ugh)
 #ifdef UNSAFE_ILHELPERS
 // we define SRCS.Unsafe in ILHelpers, and forward UnsafeRaw to Backports, which forwards back here.
-.class extern forwarder MonoMod.Backports.ILHelpers.UnsafeRaw { .assembly extern MonoMod.Backports }
 .class public abstract auto ansi sealed beforefieldinit System.Runtime.CompilerServices.Unsafe
 #else
 // we define SRCS.Unsafe in Backports to handle some runtime issues, forward to it here,
 // and Backports uses some of UnsafeRaw to actually implement it
-.class extern forwarder System.Runtime.CompilerServices.Unsafe { .assembly extern MonoMod.Backports }
-.class public abstract auto ansi sealed beforefieldinit MonoMod.Backports.ILHelpers.UnsafeRaw
+.class private abstract auto ansi sealed beforefieldinit MonoMod.Backports.ILHelpers.UnsafeRaw
 #endif
        extends [CORE_ASSEMBLY]System.Object
 {

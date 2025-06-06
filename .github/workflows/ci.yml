@@ -54,7 +54,7 @@ jobs:
 
   report_check:
     needs: [build]
-    if: always()
+    if: always() && github.event_name != 'pull_request'
     name: Report GitHub check
     runs-on: ubuntu-latest
     permissions:

@@ -1,0 +1,19 @@
+changelog:
+  exclude:
+    labels:
+    - ci
+    - good first issue
+    - help wanted
+    - invalid
+    - question
+  categories:
+  - title: Bugfixes
+    labels:
+      - bug
+  - title: New Backports
+    labels:
+    - request
+  - title: Other changes
+    labels:
+    - '*'
+      

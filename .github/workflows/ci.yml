@@ -51,3 +51,19 @@ jobs:
     uses: ./.github/workflows/upload-packages.yml
     with:
       workflow-id: ${{ needs.setup.outputs.should_skip == 'true' && fromJSON(needs.setup.outputs.skipped_by).workflowId || github.run_id }}
+
+  report_check:
+    needs: [build]
+    if: always()
+    name: Report GitHub check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+    steps:
+    - uses: LouisBrunner/checks-action@v2.0.0
+      if: always()
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        name: Build passed
+        conclusion: ${{ needs.build.result }}

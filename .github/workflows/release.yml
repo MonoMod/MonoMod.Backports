@@ -111,6 +111,7 @@ jobs:
         files: artifacts/package/release/*.nupkg
         tag_name: v${{ needs.setup.outputs.ver }}
         prerelease: ${{ inputs.prerelease }}
+        generate_release_notes: true
 
     # then, bump the version (if appropriate)
     - name: Update version

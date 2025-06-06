@@ -42,7 +42,6 @@ jobs:
     name: Build
     uses: ./.github/workflows/build.yml
     with:
-      version-raw: ${{ needs.setup.outputs.ver }}
       version: daily.${{ needs.setup.outputs.ver }}
 
   upload:

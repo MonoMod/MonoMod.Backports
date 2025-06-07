@@ -112,11 +112,32 @@ jobs:
         tag_name: v${{ needs.setup.outputs.ver }}
         prerelease: ${{ inputs.prerelease }}
         generate_release_notes: true
+        
+    # NOTE: manual package caching
+    - name: Cache restored NuGet packages
+      if: '!inputs.prerelease'
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.NUGET_PACKAGES }}
+        key: ${{ runner.os }}-nuget-v1-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}
+        restore-keys: ${{ runner.os }}-nuget-v1-
+    
+    - name: Install .NET SDK
+      if: '!inputs.prerelease'
+      uses: nike4613/install-dotnet@533307d1c90c37993c8ef1397388bc9783e7b87c
+      with:
+        global-json: global.json
 
     # then, bump the version (if appropriate)
     - name: Update version
       if: '!inputs.prerelease'
       run: ./tools/bump_version.ps1 -BumpVersion ${{ inputs.bumpkind }}
+    
+    - name: Update compat suppressions
+      if: '!inputs.prerelease'
+      run: |
+        dotnet pack -c Release -clp:NoSummary -noAutoRsp -p:RunAnalyzers=false -p:ApiCompatGenerateSuppressionFile=true
+
     - name: Commit updated version
       if: '!inputs.prerelease'
       uses: EndBug/add-and-commit@v9

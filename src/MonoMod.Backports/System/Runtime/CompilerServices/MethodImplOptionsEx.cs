@@ -1,8 +1,6 @@
 ﻿global using MethodImplOptions = System.Runtime.CompilerServices.MethodImplOptionsEx;
 using SysMethodImplOpts = System.Runtime.CompilerServices.MethodImplOptions;
 
-// TODO: maybe move this into System.Runtime.CompilerServices
-
 namespace System.Runtime.CompilerServices
 {
     public static class MethodImplOptionsEx

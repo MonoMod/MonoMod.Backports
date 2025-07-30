@@ -11,6 +11,7 @@
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace System.Threading
@@ -402,6 +403,11 @@ namespace System.Threading
             }
         }
 
+        private static readonly ConstructorInfo LockRecursionExceptionConstructor =
+            (Type.GetType("System.Threading.LockRecursionException, System.Core", false)
+             ?? Type.GetType("System.Threading.LockRecursionException")!)
+            .GetConstructor([typeof(string)])!;
+
         /// <summary>
         /// ContinueTryEnter for the thread tracking mode enabled
         /// </summary>
@@ -416,7 +422,10 @@ namespace System.Threading
             if (_owner == newOwner)
             {
                 // We don't allow lock recursion.
-                throw new LockRecursionException("Recursive lock enter");
+
+                // Unity 2018-2020 mono is missing a type forward for LockRecursionException inside of System.Core.dll
+                // To maintain forward compatibility try looking for it in mscorlib using reflection
+                throw (Exception)LockRecursionExceptionConstructor.Invoke(["Recursive lock enter"]);
             }
 
             SpinWait spinner = default;

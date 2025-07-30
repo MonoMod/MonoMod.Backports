@@ -1,7 +1,3 @@
-#if NET9_0_OR_GREATER
-#define RUNTIME_SUPPORTS_BY_REF_LIKE_GENERICS
-#endif
-
 #if !NETCOREAPP
 // See docs/RuntimeIssueNotes.md. Until 2015, Mono returned incorrect values for the sizeof opcode when applied to a type parameter.
 // To deal with this, we need to compute type size in another way, and return it as appropriate.

@@ -1,3 +1,7 @@
+#if NET9_0_OR_GREATER
+#define RUNTIME_SUPPORTS_BY_REF_LIKE_GENERICS
+#endif
+
 using System.Diagnostics.CodeAnalysis;
 
 namespace System.Runtime.CompilerServices

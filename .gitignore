@@ -236,3 +236,4 @@ ModelManifest.xml
 *.dump
 
 .mono/
+FodyWeavers.xsd

@@ -19,14 +19,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Manually reference ILHelpers -->
-    <ProjectReference Include="$(MMSourcePath)MonoMod.ILHelpers\MonoMod.ILHelpers.ilproj">
-      <Aliases>ilhelpers</Aliases>
-      <CopyLocal>false</CopyLocal>
-      <Private>false</Private>
-      <Pack>false</Pack>
-    </ProjectReference>
+    <PackageReference Include="Fody" Version="6.9.2" PrivateAssets="all" />
+    <!-- https://github.com/ltrzesniewski/InlineIL.Fody/pull/35 -->
+    <PackageReference Include="js6pak.InlineIL.Fody" Version="1.10.0-js6pak.1" PrivateAssets="all" ExcludeAssets="runtime" Pack="false" />
   </ItemGroup>
+
+  <Target Name="RemoveImplicitOutOfBandAssemblies"
+          BeforeTargets="BeforeCompile"
+          AfterTargets="FindReferenceAssembliesForReferences">
+    <ItemGroup>
+      <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(Filename) == 'System.Runtime.CompilerServices.Unsafe'" />
+    </ItemGroup>
+  </Target>
 
 </Project>
 

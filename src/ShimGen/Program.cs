@@ -115,15 +115,6 @@ foreach (var tfm in targetTfms)
             foreach (var (dllPath, _) in dlls)
             {
                 var assembly = AssemblyDefinition.FromFile(dllPath);
-                if (assembly.Name == "System.Runtime.CompilerServices.Unsafe")
-                {
-                    // For SRCS.Unsafe, we switch to using inbox on net6, BEFORE it's moved into System.Runtime (which happened net7).
-                    // As such, we want to make sure we DO NOT record SRCS.Unsafe for net6.
-                    if (tfm.Framework == ".NETCoreApp" && tfm.Version is { Major: 6, Minor: 0 })
-                    {
-                        continue;
-                    }
-                }
                 // We include FullName here so that if the string name key changes (for some reason) we handle it properly
                 list.Add((Path.GetFileName(dllPath), assembly.FullName));
             }
@@ -234,11 +225,14 @@ foreach (var (targetTfm, assemblies) in frameworkAssemblies)
         // then finalize the strong name as needed
         if (backportsShimAssembly.HasPublicKey)
         {
-            var name = Convert.ToHexString(backportsShimAssembly.GetPublicKeyToken()!);
-            var keyPath = Path.Combine(snkPath, name + ".snk");
-            if (!File.Exists(keyPath))
+            var delaySignedKeys = new[]
             {
-                Console.Error.WriteLine($"ShimGen : warning : Missing SNK file for key {name} (for {backportsShim.Name}), fakesigning");
+                "B03F5F7F11D50A3A", // MSFT
+            };
+
+            var name = Convert.ToHexString(backportsShimAssembly.GetPublicKeyToken()!);
+            if (delaySignedKeys.Contains(name))
+            {
                 var pefile = PEFile.FromFile(newShimPath);
                 var image = PEImage.FromFile(pefile);
                 image.DotNetDirectory!.Flags |= AsmResolver.PE.DotNet.DotNetDirectoryFlags.StrongNameSigned;
@@ -246,6 +240,12 @@ foreach (var (targetTfm, assemblies) in frameworkAssemblies)
             }
             else
             {
+                var keyPath = Path.Combine(snkPath, name + ".snk");
+                if (!File.Exists(keyPath))
+                {
+                    Console.Error.WriteLine($"ShimGen : error : Missing SNK file for key {name} (for {backportsShim.Name})");
+                    continue;
+                }
                 var snk = StrongNamePrivateKey.FromFile(keyPath);
                 var signer = new StrongNameSigner(snk);
                 using var assemblyFs = File.Open(newShimPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);

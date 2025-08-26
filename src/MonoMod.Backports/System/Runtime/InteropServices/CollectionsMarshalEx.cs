@@ -1,17 +1,12 @@
 ﻿#if NET5_0_OR_GREATER
 #define HAS_ASSPAN
 #endif
-#if NET6_0_OR_GREATER
-#define HAS_GETVALUEREF
-#endif
 #if NET8_0_OR_GREATER
 #define HAS_SETCOUNT
 #endif
 
 using System.Collections.Generic;
 using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
 
 namespace System.Runtime.InteropServices
 {
@@ -40,66 +35,6 @@ namespace System.Runtime.InteropServices
             }
         }
 #endif
-        
-#if !HAS_GETVALUEREF
-        private static class DictRelfectionHolder<TKey, TValue> where TKey : notnull
-        {
-            public delegate ref TValue? EntryValueFieldRefGetter(Dictionary<TKey, TValue> dict, TKey key);
-            public static EntryValueFieldRefGetter GetEntryValueFieldRef;
-
-            static DictRelfectionHolder()
-            {
-                var dictType = typeof(Dictionary<TKey, TValue>);
-
-                var findValueMethod = dictType.GetMethod("FindValue", BindingFlags.Instance | BindingFlags.NonPublic,
-                    null, [typeof(TKey)], null);
-
-                if (findValueMethod is not null)
-                {
-                    GetEntryValueFieldRef = (EntryValueFieldRefGetter)Delegate.CreateDelegate(typeof(EntryValueFieldRefGetter), findValueMethod);
-                    return;
-                }
-                
-                var entriesField = dictType.GetField("_entries", BindingFlags.Instance | BindingFlags.NonPublic)
-                    ?? throw new NotSupportedException("Could not get dictionary entries array field");
-
-                var entryType = entriesField.FieldType.GetElementType()!;
-                var entryValueField = entryType.GetField("value",
-                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)!;
-                
-                var findEntryMethod = dictType.GetMethod("FindEntry", BindingFlags.Instance | BindingFlags.NonPublic)
-                    ?? throw new NotSupportedException("Could not get dictionary find entry method");
-                
-                var dm = new DynamicMethod("GetEntryValueFieldRef", typeof(TValue).MakeByRefType(), [dictType, typeof(TKey)], typeof(CollectionExtensionsEx), true);
-                var il = dm.GetILGenerator();
-
-                var entryIndex = il.DeclareLocal(typeof(int));
-                var successLabel = il.DefineLabel();
-
-                il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Ldarg_1);
-                il.Emit(OpCodes.Callvirt, findEntryMethod);
-                il.Emit(OpCodes.Stloc, entryIndex);
-                il.Emit(OpCodes.Ldloc, entryIndex);
-                il.Emit(OpCodes.Ldc_I4_0);
-                il.Emit(OpCodes.Bge, successLabel);
-                il.Emit(OpCodes.Ldc_I4_0);
-                il.Emit(OpCodes.Conv_U);
-                // im not taking any risks here
-                il.Emit(OpCodes.Call, typeof(Unsafe).GetMethod("AsRef", [typeof(void*)])!.MakeGenericMethod(typeof(TValue)));
-                il.Emit(OpCodes.Ret);
-                il.MarkLabel(successLabel);
-                il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Ldfld, entriesField);
-                il.Emit(OpCodes.Ldloc, entryIndex);
-                il.Emit(OpCodes.Ldelema, entriesField.FieldType.GetElementType()!);
-                il.Emit(OpCodes.Ldflda, entryValueField);
-                il.Emit(OpCodes.Ret);
-
-                GetEntryValueFieldRef = (EntryValueFieldRefGetter)dm.CreateDelegate(typeof(EntryValueFieldRefGetter));
-            }
-        }
-#endif
 
         extension(CollectionsMarshal)
         {
@@ -117,7 +52,7 @@ namespace System.Runtime.InteropServices
                 // setting the version field only really needs to be best effort
                 if (ListFieldHolder<T>.VersionField is { } versionField)
                 {
-                    versionField.SetValue(list, (int)versionField.GetValue(list) + 1);
+                    versionField.SetValue(list, (int)versionField.GetValue(list)! + 1);
                 }
 
                 if (count > list.Capacity)
@@ -149,34 +84,6 @@ namespace System.Runtime.InteropServices
                 }
                 
                 ListFieldHolder<T>.CountField.SetValue(list, count);
-#endif
-            }
-
-            public static ref TValue GetValueRefOrNullRef<TKey, TValue>(Dictionary<TKey, TValue> dict, TKey key)
-                where TKey : notnull
-            {
-#if HAS_GETVALUEREF
-                return ref CollectionsMarshal.GetValueRefOrNullRef(dict, key);
-#else
-                // they don't validate for null so neither will we
-                return ref DictRelfectionHolder<TKey, TValue>.GetEntryValueFieldRef(dict, key)!;
-#endif
-            }
-            
-            public static ref TValue? GetValueRefOrAddDefault<TKey, TValue>(Dictionary<TKey, TValue> dict, TKey key)
-                where TKey : notnull
-            {
-#if HAS_GETVALUEREF
-                return ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key);
-#else
-                // they don't validate for null so neither will we
-                if (dict.ContainsKey(key))
-                {
-                    return ref DictRelfectionHolder<TKey, TValue>.GetEntryValueFieldRef(dict, key);
-                }
-
-                dict.Add(key, default!);
-                return  ref DictRelfectionHolder<TKey, TValue>.GetEntryValueFieldRef(dict, key);
 #endif
             }
         }

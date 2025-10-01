@@ -131,7 +131,7 @@ namespace System
 
         private static bool IsReferenceOrContainsReferencesCore(Type type)
         {
-            if (type.GetTypeInfo().IsPrimitive) // This is hopefully the common case. All types that return true for this are value types w/out embedded references.
+            if (type.GetTypeInfo().IsPrimitive || type.GetTypeInfo().IsPointer) // This is hopefully the common case. All types that return true for this are value types w/out embedded references.
                 return false;
 
             if (!type.GetTypeInfo().IsValueType)

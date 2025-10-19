@@ -193,7 +193,9 @@
 
   <Target Name="_BuildPackageConflictOverrides" DependsOnTargets="_GetShimmedPackages">
     <PropertyGroup>
-      <_OverridePackages>@(_ShimmedPackages->'%(Identity)|%(Version)')</_OverridePackages>
+      <!--<_OverridePackages>@(_ShimmedPackages->'%(Identity)|%(Version)')</_OverridePackages>-->
+      <!-- the resolver prefers the highest version, so we deliberately set this to max to always override -->
+      <_OverridePackages>@(_ShimmedPackages->'%(Identity)|9999.9999.9999.9999')</_OverridePackages>
       <_ImportedPropOpen><![CDATA[<$(PackageId.Replace('.','_'))_Imported>]]></_ImportedPropOpen>
       <_ImportedPropClose><![CDATA[</$(PackageId.Replace('.','_'))_Imported>]]></_ImportedPropClose>
       <_BuildFileContent>

@@ -18,6 +18,25 @@
     </PackageReference>
   </ItemDefinitionGroup>
 
+  <!-- translate ExtraShimPackageVersion into PackageDownload -->
+  <Target Name="_MakePackageDownloadForExtraShimPackageVersion"
+          BeforeTargets="CollectPackageDownloads"
+          Outputs="|%(ExtraShimPackageVersion.Identity)|">
+    <PropertyGroup>
+      <_PkgName>%(ExtraShimPackageVersion.Identity)</_PkgName>
+      <_VerList>%(ExtraShimPackageVersion.Version)</_VerList>
+    </PropertyGroup>
+    <ItemGroup>
+      <_VerList Remove="@(_VerList)" />
+      <_VerList Include="$(_VerList)" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageDownload Include="$(_PkgName)">
+        <Version>@(_VerList->'[%(Identity)]',';')</Version>
+      </PackageDownload>
+    </ItemGroup>
+  </Target>
+
   <PropertyGroup>
     <_ShimsDir>$(IntermediateOutputPath)shims/</_ShimsDir>
     <_OutputTfmsTxt>$(IntermediateOutputPath)tfms.txt</_OutputTfmsTxt>
@@ -34,8 +53,27 @@
     </ItemGroup>
   </Target>
   
+  <Target Name="_GetExtraShimmedPackages" Outputs="|%(ExtraShimPackageVersion.Identity)|">
+    <PropertyGroup>
+      <_PkgName>%(ExtraShimPackageVersion.Identity)</_PkgName>
+      <_VerList>%(ExtraShimPackageVersion.Version)</_VerList>
+      <_PkgNameLower>$([System.String]::Copy($(_PkgName)).ToLowerInvariant())</_PkgNameLower>
+      <_PkgBasePath>$([MSBuild]::NormalizePath('$(NuGetPackageRoot)', '$(_PkgNameLower)'))</_PkgBasePath>
+    </PropertyGroup>
+    <ItemGroup>
+      <_VerList Remove="@(_VerList)" />
+      <_VerList Include="$(_VerList)" />
+    </ItemGroup>
+    <ItemGroup>
+      <_VerList>
+        <Path>$([MSBuild]::NormalizePath('$(_PkgBasePath)', '%(_VerList.Identity)'))</Path>
+      </_VerList>
+      <_ShimmedPackagePaths Include="@(_VerList->'%(Path)')"/>
+    </ItemGroup>
+  </Target>
+
   <Target Name="_GetShimmedPackages"
-          DependsOnTargets="_ConfigureShimmedPackageRefs">
+          DependsOnTargets="_ConfigureShimmedPackageRefs;_GetExtraShimmedPackages">
     <ItemGroup>
       <_ShimmedPackages Include="@(PackageReference)" Condition="'%(Shim)' == 'true'">
         <PkgProp>Pkg$([System.String]::Copy('%(Identity)').Replace('.','_'))</PkgProp>
@@ -45,6 +83,10 @@
       <_ShimmedPackages>
         <PkgPath>$(%(PkgProp))</PkgPath>
       </_ShimmedPackages>
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ShimmedPackagePaths Include="@(_ShimmedPackages->'%(PkgPath)')" />
     </ItemGroup>
   </Target>
 
@@ -74,7 +116,7 @@
       <_PPArguments Include="$(_ShimsDir)" /> <!-- 1: the output directory -->
       <_PPArguments Include="$(_SnkDir)" /> <!-- 2: snk directory -->
       <!-- 3: the paths to the packages to process -->
-      <_PPArguments Include="%(_ShimmedPackages.PkgPath)" />
+      <_PPArguments Include="@(_ShimmedPackagePaths)" />
     </ItemGroup>
 
     <Exec ConsoleToMsBuild="true" LogStandardErrorAsError="false"
@@ -111,7 +153,7 @@
           DependsOnTargets="BuildShims"
           BeforeTargets="CopyFilesToOutputDirectory"
           Inputs="@(_ShimFiles)"
-          Outputs="@(_ShimFiles->'$(OutDir)%(RecursiveDir)%(Filename)%(Extension)'">
+          Outputs="@(_ShimFiles->'$(OutDir)%(RecursiveDir)%(Filename)%(Extension)')">
     <Copy SourceFiles="@(_ShimFiles)" DestinationFolder="$(OutDir)%(RecursiveDir)" />
   </Target>
   

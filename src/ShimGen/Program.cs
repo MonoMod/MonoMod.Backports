@@ -61,12 +61,22 @@ var fwReducer = new FrameworkReducer();
 // first, arrange the lookups in a reasonable manner
 // pkgPath -> framework -> dllPaths
 var packageLayout = new Dictionary<string, Dictionary<NuGetFramework, List<(string dllPath, string dllName)>>>();
-var dllsByDllName = new Dictionary<string, Dictionary<NuGetFramework, string>>();
+var dllsByDllName = new Dictionary<string, Dictionary<NuGetFramework, List<string>>>();
 foreach (var (pkgPath, libPath, framework, dllPath) in pkgList
     .SelectMany(ta
         => ta.Item2.SelectMany(tb
             => tb.dlls.Select(dll => (ta.pkgPath, tb.libPath, tb.fwk, dll)))))
 {
+    /*if (framework is
+        {
+            Framework: ".NETStandard",
+            Version.Major: < 2
+        })
+    {
+        // this is .NET Standard < 2.0; we do not want to try to support it. Skip.
+        continue;
+    }*/
+
     if (!packageLayout.TryGetValue(pkgPath, out var fwDict))
     {
         packageLayout.Add(pkgPath, fwDict = new());
@@ -90,13 +100,19 @@ foreach (var (pkgPath, libPath, framework, dllPath) in pkgList
         dllsByDllName.Add(dllName, dllPathList = new());
     }
 
-    dllPathList.Add(framework, dllPath);
+    if (!dllPathList.TryGetValue(framework, out var dllPathSet))
+    {
+        dllPathList.Add(framework, dllPathSet = new());
+    }
+
+    dllPathSet.Add(dllPath);
 }
 
 // collect the list of ALL target frameworks that we might care about
 var targetTfms = fwReducer
     .ReduceEquivalent(packageLayout.Values.SelectMany(v => v.Keys))
     .Where(fwk => fwk.Framework is ".NETFramework" or ".NETStandard" or ".NETCoreApp") // filter to just the standard Frameworks, because AsmResolver can't handle all the wacko ones
+    .Where(fwk => fwk is not { Framework: ".NETStandard", Version.Major: < 2 })
     .ToArray();
 
 // then build up a mapping of the source files for all of those TFMs
@@ -153,7 +169,7 @@ foreach (var (targetTfm, assemblies) in frameworkAssemblies)
         AssemblyDefinition? backportsShimAssembly = null;
         AssemblyReference? backportsReference = null;
 
-        var bclShimPath = GetFrameworkKey(dllsByDllName[dllName], targetTfm, fwReducer);
+        var bclShimPath = GetFrameworkKey(dllsByDllName[dllName], targetTfm, fwReducer).First();
 
         var bclShim = ModuleDefinition.FromFile(bclShimPath, readerParams);
 
@@ -179,7 +195,7 @@ foreach (var (targetTfm, assemblies) in frameworkAssemblies)
             new AssemblyReference("MonoMod.Backports", new(1, 0, 0, 0))
             .ImportWith(backportsShim.DefaultImporter);
 
-        foreach (var file in dllsByDllName[dllName].Values)
+        foreach (var file in dllsByDllName[dllName].Values.SelectMany(x => x))
         {
             bclShim = ModuleDefinition.FromFile(file, readerParams);
 

@@ -5,6 +5,7 @@ using AsmResolver.DotNet.Serialized;
 using AsmResolver.IO;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using NuGet.Frameworks;
+using NuGet.Versioning;
 using System.Collections.Immutable;
 
 if (args is not [
@@ -42,12 +43,60 @@ var precSorter = new FrameworkPrecedenceSorter(DefaultFrameworkNameProvider.Inst
 // load packages dict
 var packages = dotnetOobPackagePaths
     .Select(pkgPath
-        => (path: pkgPath, name: Path.GetFileName(Path.TrimEndingDirectorySeparator(Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(pkgPath))!)),
+        => (path: pkgPath,
+            name: Path.GetFileName(Path.TrimEndingDirectorySeparator(Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(pkgPath))!)),
+            version: new NuGet.Versioning.NuGetVersion((Path.GetFileName(Path.TrimEndingDirectorySeparator(pkgPath)))),
             fwks: Directory.EnumerateDirectories(Path.Combine(pkgPath, "lib"))
                 .Select(libPath => (fwk: NuGetFramework.ParseFolder(Path.GetFileName(libPath)),
                     files: Directory.GetFiles(libPath, "*.dll")))
                 .ToDictionary(t => t.fwk, t => t.files)))
-    .ToDictionary(t => t.name, t => (t.path, t.fwks));
+    .GroupBy(t => t.name)
+    .Select(g => (name: g.Key,
+        fwks: g.Select(t => (t.fwks, t.version))
+        .Aggregate(MergeFrameworks)))
+    .ToDictionary(t => t.name, t => t.fwks.fwks);
+
+(Dictionary<NuGetFramework, string[]> d, NuGetVersion v) MergeFrameworks((Dictionary<NuGetFramework, string[]> d, NuGetVersion v) a, (Dictionary<NuGetFramework, string[]> d, NuGetVersion v) b)
+{
+    if (a.v == b.v)
+    {
+        // unify
+        var dict = new Dictionary<NuGetFramework, HashSet<string>>();
+        foreach (var (k, v) in a.d)
+        {
+            dict.Add(k, v.ToHashSet());
+        }
+        foreach (var (k, v) in b.d)
+        {
+            if (!dict.TryGetValue(k, out var l))
+            {
+                dict.Add(k, l = new());
+            }
+            foreach (var vi in v)
+            {
+                _ = l.Add(vi);
+            }
+        }
+
+        return (dict.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToArray()), a.v);
+    }
+
+    if (a.v > b.v)
+    {
+        // a is newer than b, add frameworks from b not present in a
+        foreach (var (k, v) in b.d)
+        {
+            _ = a.d.TryAdd(k, v);
+        }
+
+        return (a.d, a.v);
+    }
+    else
+    {
+        // b is newer (or equal) to a, reverse parameters
+        return MergeFrameworks(b, a);
+    }
+}
 
 // load available shims
 var allShimDlls = Directory.EnumerateFiles(shimsDir, "*.dll", new EnumerationOptions() { RecurseSubdirectories = true })
@@ -71,8 +120,11 @@ var shimsByTfm = allShimDlls
 // load our tfm list
 var packageTfms = reducer.ReduceEquivalent(
     packages
-        .SelectMany(t => t.Value.fwks)
+        .SelectMany(t => t.Value)
         .Select(t => t.Key)
+        .Where(f => f is not { Framework: ".NETStandard", Version.Major: < 2 }) // make sure we ignore netstandard1.x
+        .Where(f => DotNetRuntimeInfo.TryParse(f.GetDotNetFrameworkName(DefaultFrameworkNameProvider.Instance), out var rti)
+                && (rti.IsNetFramework || rti.IsNetStandard || rti.IsNetCoreApp))
     ).ToArray();
 var tfms = reducer.ReduceEquivalent(
         File.ReadAllLines(tfmsFilePath)
@@ -89,7 +141,7 @@ var assemblies = new Dictionary<string, ModuleDefinition>();
 var exports = new Dictionary<string, TypeExport>();
 var assemblyRefsByName = new Dictionary<string, AssemblyReference>();
 var didReportError = false;
-foreach (var (pkgName, (_, fwks)) in packages)
+foreach (var (pkgName, fwks) in packages)
 {
     foreach (var file in fwks.SelectMany(kvp => kvp.Value))
     {
@@ -233,7 +285,7 @@ foreach (var tfm in packageTfms)
         IImplementation impl;
 
         // resolve the implementation for this export
-        var pkgFwks = packages[export.FromPackage].fwks;
+        var pkgFwks = packages[export.FromPackage];
         if (reducer.GetNearest(tfm, pkgFwks.Keys) is not null)
         {
             // valuetuple is a bit special...
@@ -289,7 +341,7 @@ return 0;
 string GetReferencePathForTfm(NuGetFramework framework, bool useShim)
 {
     IEnumerable<string> dlls = [];
-    foreach (var (_, (_, fwks)) in packages)
+    foreach (var (_, fwks) in packages)
     {
         var best = reducer.GetNearest(framework, fwks.Keys);
         if (best is null) continue; // no match, shouldn't be included
@@ -298,7 +350,8 @@ string GetReferencePathForTfm(NuGetFramework framework, bool useShim)
         // if we want to use shims instead, remap all of the files to use the shims
         if (useShim)
         {
-            var shimFilesDict = shimsByTfm[reducer.GetNearest(best, shimsByTfm.Keys)!];
+            var shimTfm = reducer.GetNearest(best, shimsByTfm.Keys) ?? reducer.GetNearest(framework, shimsByTfm.Keys);
+            var shimFilesDict = shimsByTfm[shimTfm!];
             pkgFiles = pkgFiles
                 .Select(f => Path.GetFileName(f))
                 .Select(n => shimFilesDict.TryGetValue(n, out var v) ? v : null)

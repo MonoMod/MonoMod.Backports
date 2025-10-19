@@ -38,6 +38,7 @@
     <_BackportsTfmsTxt>$(IntermediateOutputPath)backports_tfms.txt</_BackportsTfmsTxt>
   </PropertyGroup>
 
+  <!-- TODO: make this include new packages as well somehow or other -->
   <Target Name="_GetPackagesSupportedTfms" DependsOnTargets="_GetShimmedPackages" Outputs="|%(_ShimmedPackages.Identity)|">
     <PropertyGroup>
       <_PkgPath>%(_ShimmedPackages.PkgPath)</_PkgPath>
@@ -128,7 +129,7 @@
       <!-- 3: the path to the generated shims -->
       <_PPArguments Include="$(_ShimsDir)" />
       <!-- 4: the paths to the packages to process -->
-      <_PPArguments Include="%(_ShimmedPackages.PkgPath)" />
+      <_PPArguments Include="@(_ShimmedPackagePaths)" />
     </ItemGroup>
 
     <Exec ConsoleToMsBuild="true" LogStandardErrorAsError="true"

@@ -30,6 +30,13 @@
           <CompileUsingReferenceAssemblies>false</CompileUsingReferenceAssemblies>
           <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
         </PropertyGroup>
+        
+        <ItemGroup Condition="'%24([MSBuild]::GetTargetFrameworkIdentifier(%24(TargetFramework)))' == '.NETFramework'">
+          <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+          </PackageReference>
+        </ItemGroup>
         <ItemGroup>
           <ProjectReference Include="$(MSBuildThisFileDirectory)../MonoMod.Backports/MonoMod.Backports.csproj" />
         </ItemGroup>

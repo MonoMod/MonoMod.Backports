@@ -40,6 +40,7 @@
   <PropertyGroup>
     <_ShimsDir>$(IntermediateOutputPath)shims/</_ShimsDir>
     <_OutputTfmsTxt>$(IntermediateOutputPath)tfms.txt</_OutputTfmsTxt>
+    <_BackportsTfmsTxt>$(IntermediateOutputPath)backports_tfms.txt</_BackportsTfmsTxt>
   </PropertyGroup>
 
   <Target Name="_ConfigureShimmedPackageRefs"
@@ -90,9 +91,38 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="_PrepareRawTfmList">
+    <ItemGroup>
+      <_BackportsProps Remove="@(_BackportsProps)"/>
+    </ItemGroup>
+
+    <!-- Ask Backports for the list of TFMs to test against -->
+    <MSBuild Projects="$(MSBuildThisFileDirectory)../MonoMod.Backports/MonoMod.Backports.csproj"
+             Targets="GetProperties"
+             Properties="PropertyNames=TargetFrameworks;BuildProjectReferences=false">
+      <Output ItemName="_BackportsProps" TaskParameter="TargetOutputs" />
+    </MSBuild>
+
+    <PropertyGroup>
+      <_BackportsTfms>@(_BackportsProps->'%(Value)')</_BackportsTfms>
+    </PropertyGroup>
+    <ItemGroup>
+      <_BackportsTfms1 Remove="@(_BackportsTfms1)" />
+      <_BackportsTfms1 Include="$(_BackportsTfms)" />
+      <_BackportsTfms1 Include="$(PackageMinTfms)" />
+      <_BackportsTfms Remove="@(_BackportsTfms)" />
+      <_BackportsTfms Include="@(_BackportsTfms1->Distinct())" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_BackportsTfms>@(_BackportsTfms)</_BackportsTfms>
+    </PropertyGroup>
+
+    <WriteLinesToFile File="$(_BackportsTfmsTxt)" Lines="@(_BackportsTfms)" WriteOnlyWhenDifferent="false" Overwrite="true" />
+  </Target>
+
   <Target Name="BuildShims"
           BeforeTargets="CoreCompile"
-          DependsOnTargets="$(CoreCompileDependsOn);_GetShimmedPackages;ResolveProjectReferences"
+          DependsOnTargets="$(CoreCompileDependsOn);_PrepareRawTfmList;_GetShimmedPackages;ResolveProjectReferences"
           Inputs="$(MSBuildAllProjects);@(MMShimGen)"
           Outputs="$(_OutputTfmsTxt)"
           Condition="'$(dotnet-nugetize)' == ''"
@@ -113,9 +143,13 @@
 
     <ItemGroup>
       <_PPArguments Remove="@(_PPArguments)" />
-      <_PPArguments Include="$(_ShimsDir)" /> <!-- 1: the output directory -->
-      <_PPArguments Include="$(_SnkDir)" /> <!-- 2: snk directory -->
-      <!-- 3: the paths to the packages to process -->
+      <!-- 1: the output directory -->
+      <_PPArguments Include="$(_ShimsDir)" />
+      <!-- 2: snk directory -->
+      <_PPArguments Include="$(_SnkDir)" />
+      <!-- 3: tfms file -->
+      <_PPArguments Include="$(_BackportsTfmsTxt)" />
+      <!-- 4: the paths to the packages to process -->
       <_PPArguments Include="@(_ShimmedPackagePaths)" />
     </ItemGroup>
 

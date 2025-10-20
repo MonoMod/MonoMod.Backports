@@ -118,19 +118,32 @@ var shimsByTfm = allShimDlls
 
 
 // load our tfm list
-var packageTfms = reducer.ReduceEquivalent(
+var packageTfmsRaw = reducer.ReduceEquivalent(
     packages
         .SelectMany(t => t.Value)
         .Select(t => t.Key)
+    ).ToArray();
+
+var packageTfmsDirect = 
+        packageTfmsRaw
         .Where(f => f is not { Framework: ".NETStandard", Version.Major: < 2 }) // make sure we ignore netstandard1.x
         .Where(f => DotNetRuntimeInfo.TryParse(f.GetDotNetFrameworkName(DefaultFrameworkNameProvider.Instance), out var rti)
-                && (rti.IsNetFramework || rti.IsNetStandard || rti.IsNetCoreApp))
-    ).ToArray();
-var tfms = reducer.ReduceEquivalent(
+                && (rti.IsNetFramework || rti.IsNetStandard || rti.IsNetCoreApp));
+
+var backportsTfms = reducer.ReduceEquivalent(
         File.ReadAllLines(tfmsFilePath)
-            .Select(NuGetFramework.ParseFolder)
-            .Concat(packageTfms)
-    )
+        .Select(NuGetFramework.ParseFolder)
+    ).ToArray();
+var packageTfmsIndirect = backportsTfms
+    .Where(tfm
+        => packages.Any(kvp => reducer.GetNearest(tfm, kvp.Value.Keys) is not null));
+
+var packageTfms = reducer.ReduceEquivalent(
+    packageTfmsDirect.Concat(packageTfmsIndirect)
+    ).ToArray();
+
+var tfms = reducer
+    .ReduceEquivalent(backportsTfms.Concat(packageTfmsDirect))
     .Order(precSorter)
     .ToArray();
 
@@ -350,7 +363,7 @@ string GetReferencePathForTfm(NuGetFramework framework, bool useShim)
         // if we want to use shims instead, remap all of the files to use the shims
         if (useShim)
         {
-            var shimTfm = reducer.GetNearest(best, shimsByTfm.Keys) ?? reducer.GetNearest(framework, shimsByTfm.Keys);
+            var shimTfm = reducer.GetNearest(framework, shimsByTfm.Keys);
             var shimFilesDict = shimsByTfm[shimTfm!];
             pkgFiles = pkgFiles
                 .Select(f => Path.GetFileName(f))

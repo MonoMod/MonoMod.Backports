@@ -4,7 +4,7 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
 
   <ItemGroup>
-    <ProjectReference Include="$(MMSourcePath)ShimGen\ShimGen.csproj"
+    <ProjectReference Include="$(MMSourcePath)build\ShimGen\ShimGen.csproj"
                       Reference="false" ReferenceOutputAssembly="false"
                       OutputItemType="MMShimGen"
                       Private="false" Pack="false"
@@ -97,7 +97,7 @@
     </ItemGroup>
 
     <!-- Ask Backports for the list of TFMs to test against -->
-    <MSBuild Projects="$(MSBuildThisFileDirectory)../MonoMod.Backports/MonoMod.Backports.csproj"
+    <MSBuild Projects="$(MMSourcePath)MonoMod.Backports/MonoMod.Backports.csproj"
              Targets="GetProperties"
              Properties="PropertyNames=TargetFrameworks;BuildProjectReferences=false">
       <Output ItemName="_BackportsProps" TaskParameter="TargetOutputs" />

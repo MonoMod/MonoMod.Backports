@@ -19,7 +19,7 @@
              AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
     <Task>
       <Reference Include="$(PkgSystem_Collections_Immutable)/lib/netstandard2.0/System.Collections.Immutable.dll" />
-      <Code Language="cs" Type="Class" Source="$(MMSourcePath)MonoMod.Backports.Tasks/FilterTfmsTask.cs" />
+      <Code Language="cs" Type="Class" Source="$(MMSourcePath)build/MonoMod.Backports.Tasks/FilterTfmsTask.cs" />
     </Task>
   </UsingTask>
 
@@ -28,7 +28,7 @@
              AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
     <Task>
       <Reference Include="$(PkgSystem_Collections_Immutable)/lib/netstandard2.0/System.Collections.Immutable.dll" />
-      <Code Language="cs" Type="Class" Source="$(MMSourcePath)MonoMod.Backports.Tasks/FilterTfmsTask.cs" />
+      <Code Language="cs" Type="Class" Source="$(MMSourcePath)build/MonoMod.Backports.Tasks/FilterTfmsTask.cs" />
     </Task>
   </UsingTask>
 

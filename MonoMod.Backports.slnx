@@ -18,9 +18,9 @@
     <Project Path="src/MonoMod.Backports/MonoMod.Backports.csproj" />
   </Folder>
   <Folder Name="/src/build/">
-    <Project Path="src/FilterPackagesForRestore/FilterPackagesForRestore.csproj" Id="b5455b81-ea3d-491e-9913-50d209ea1391" />
-    <Project Path="src/GenApiCompatDll/GenApiCompatDll.csproj" Id="265b1234-55c4-4edd-996c-12ac77527224" />
-    <Project Path="src/MonoMod.Backports.Tasks/MonoMod.Backports.Tasks.csproj" />
-    <Project Path="src/ShimGen/ShimGen.csproj" />
+    <Project Path="src/build/FilterPackagesForRestore/FilterPackagesForRestore.csproj" Id="b5455b81-ea3d-491e-9913-50d209ea1391" />
+    <Project Path="src/build/GenApiCompatDll/GenApiCompatDll.csproj" Id="265b1234-55c4-4edd-996c-12ac77527224" />
+    <Project Path="src/build/MonoMod.Backports.Tasks/MonoMod.Backports.Tasks.csproj" />
+    <Project Path="src/build/ShimGen/ShimGen.csproj" />
   </Folder>
 </Solution>

@@ -3,13 +3,13 @@
   <!-- ApiCompat fixes -->
 
   <ItemGroup>
-    <ProjectReference Include="$(MMSourcePath)GenApiCompatDll\GenApiCompatDll.csproj"
+    <ProjectReference Include="$(MMSourcePath)build\GenApiCompatDll\GenApiCompatDll.csproj"
                       Reference="false" ReferenceOutputAssembly="false"
                       OutputItemType="MMGenApiCompat"
                       Private="false" Pack="false"
                       SetTargetFramework="TargetFramework=net9.0"
                       SkipGetTargetFrameworkProperties="true" />
-    <ProjectReference Include="$(MMSourcePath)FilterPackagesForRestore\FilterPackagesForRestore.csproj"
+    <ProjectReference Include="$(MMSourcePath)build\FilterPackagesForRestore\FilterPackagesForRestore.csproj"
                       Reference="false" ReferenceOutputAssembly="false"
                       OutputItemType="MMFilterPkgs"
                       Private="false" Pack="false"
@@ -38,7 +38,7 @@
           </PackageReference>
         </ItemGroup>
         <ItemGroup>
-          <ProjectReference Include="$(MSBuildThisFileDirectory)../MonoMod.Backports/MonoMod.Backports.csproj" />
+          <ProjectReference Include="$(MMSourcePath)MonoMod.Backports/MonoMod.Backports.csproj" />
         </ItemGroup>
         {{PKGREF}}
       </Project>
@@ -84,7 +84,7 @@
   </Target>
 
   <Target Name="_WaitForBackportsBuild">
-    <MSBuild Projects="$(MSBuildThisFileDirectory)../MonoMod.Backports/MonoMod.Backports.csproj" Targets="Build" />
+    <MSBuild Projects="$(MMSourcePath)MonoMod.Backports/MonoMod.Backports.csproj" Targets="Build" />
   </Target>
 
   <Target Name="_FixReferencePathForValidate" DependsOnTargets="_SetUpShimPackagePaths;_GetPackagesSupportedTfms">
@@ -93,7 +93,7 @@
     </ItemGroup>
 
     <!-- Ask Backports for the list of TFMs to test against -->
-    <MSBuild Projects="$(MSBuildThisFileDirectory)../MonoMod.Backports/MonoMod.Backports.csproj"
+    <MSBuild Projects="$(MMSourcePath)MonoMod.Backports/MonoMod.Backports.csproj"
              Targets="GetProperties"
              Properties="PropertyNames=TargetFrameworks;BuildProjectReferences=false">
       <Output ItemName="_BackportsProps" TaskParameter="TargetOutputs" />

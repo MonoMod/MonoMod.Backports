@@ -64,7 +64,7 @@ public static class ThreadLocalEx
 #if HAS_ALLVALUES
         => true;
 #else
-        => false;
+        => ThreadLocalInfo<object>.Info.GetValuesDel is not null;
 #endif
 
     extension<T>(ThreadLocal<T>)
@@ -91,7 +91,7 @@ public static class ThreadLocalEx
         public static ThreadLocal<T> Create(Func<T> valueFactory, bool trackAllValues)
         {
 #if HAS_ALLVALUES
-            return new(trackAllValues);
+            return new(valueFactory, trackAllValues);
 #else
             if (ThreadLocalInfo<T>.Info.CreateFuncBoolDel is { } create)
             {
@@ -132,13 +132,13 @@ public static class ThreadLocalEx
         public IList<T> Values => self.Values();
     }
 
+#if false // when extension constructors actually exist
     extension<T>(ThreadLocal<T>)
     {
-#if false // when extension constructors actually exist
         public static ThreadLocal<T>(bool trackAllValues)
             => Create<T>(trackAllValues);
         public static ThreadLocal<T>(Func<T> valueFactory, bool trackAllValues)
             => Create<T>(valueFactory, trackAllValues);
-#endif
     }
+#endif
 }

@@ -1,17 +1,11 @@
 ﻿using ArApiCompat.ApiCompatibility.Comparing;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace ArApiCompat.ApiCompatibility.Suppressions;
 
 internal sealed class SuppressionFile
 {
-
     public sealed class Comparison
     {
         public string? Left { get; set; }

@@ -1,7 +1,9 @@
-using System.Diagnostics;
 using ArApiCompat.ApiCompatibility.AssemblyMapping;
 using ArApiCompat.Utilities.AsmResolver;
 using AsmResolver.DotNet;
+using AsmResolver.PE.DotNet.Metadata.Tables;
+using System.Data;
+using System.Diagnostics;
 
 namespace ArApiCompat.ApiCompatibility.Comparing.Rules;
 
@@ -10,6 +12,13 @@ public sealed class CannotChangeGenericConstraintDifference(DifferenceType type,
 {
     public override string Message => $"Cannot {(type == DifferenceType.Added ? "add" : "remove")} constraint '{constraint}' on type parameter '{leftTypeParameter}' of '{left}'";
     public override DifferenceType Type => type;
+}
+
+public sealed class CannotChangeGenericVarianceDifference(DifferenceType type, IMemberDefinition left, GenericParameter leftTypeParameter, string variance, string newVariance) : CompatDifference
+{
+    public override DifferenceType Type => type;
+
+    public override string Message => $"Cannot change variance of type parameter '{leftTypeParameter}' on '{left}' from {variance} to {newVariance}";
 }
 #pragma warning restore CS9113 // Parameter is unread.
 
@@ -64,10 +73,14 @@ public sealed class CannotChangeGenericConstraints : BaseRule
             var addedConstraints = new List<string>();
             var removedConstraints = new List<string>();
 
-            // CompareBoolConstraint(typeParam => typeParam.HasConstructorConstraint, "new()"); TODO
-            // CompareBoolConstraint(typeParam => typeParam.HasNotNullConstraint, "notnull"); TODO
             CompareBoolConstraint(typeParam => typeParam.HasReferenceTypeConstraint, "class");
+            CompareBoolConstraint(typeParam => typeParam.HasNotNullableValueTypeConstraint, "struct");
+            CompareBoolConstraint(typeParam => typeParam.HasDefaultConstructorConstraint, "new()");
+
+
+            // CompareBoolConstraint(typeParam => typeParam.HasNotNullConstraint, "notnull"); TODO
             // CompareBoolConstraint(typeParam => typeParam.HasUnmanagedTypeConstraint, "unmanaged"); TODO
+
             // unmanaged implies struct
             // CompareBoolConstraint(typeParam => typeParam.HasValueTypeConstraint & !typeParam.HasUnmanagedTypeConstraint, "struct"); TODO
 
@@ -119,6 +132,19 @@ public sealed class CannotChangeGenericConstraints : BaseRule
                     removedConstraints.Add(constraintName);
                 }
             }
+
+            // while we're here, also check for variance. Variance can ALWAYS be ADDED, but never CHANGED.
+            // In otherwords, we can make the following changes, and only them:
+            //   Invariant -> Covariant
+            //   Invariant -> Contravariant
+            var leftVariance = leftTypeParam.Variance;
+            var rightVariance = rightTypeParam.Variance;
+            if (leftVariance != rightVariance && leftVariance != GenericParameterAttributes.NonVariant)
+            {
+                differences.Add(new CannotChangeGenericVarianceDifference(
+                    rightVariance is GenericParameterAttributes.NonVariant ? DifferenceType.Removed : DifferenceType.Changed,
+                    left, leftTypeParam, FormatVariance(leftVariance), FormatVariance(rightVariance)));
+            }
         }
     }
 
@@ -129,4 +155,13 @@ public sealed class CannotChangeGenericConstraints : BaseRule
             .Where(c => c != null)
             .ToHashSet(ExtendedSignatureComparer.VersionAgnostic!);
     }
+
+    private static string FormatVariance(GenericParameterAttributes variance)
+        => variance switch
+        {
+            GenericParameterAttributes.NonVariant => "invariant",
+            GenericParameterAttributes.Covariant => "covariant ('out')",
+            GenericParameterAttributes.Contravariant => "contravariant ('in')",
+            _ => variance.ToString(),
+        };
 }

@@ -16,8 +16,8 @@ if (args is not [{ } suppressionFile, { } leftAssemblyFile, { } leftRefPathFile,
 
 var writeSuppression = rest is ["--write-suppressions", ..];
 
-var (leftModule, leftUniverse) = LoadModuleInUniverse(leftAssemblyFile, File.ReadAllLines(leftRefPathFile));
-var (rightModule, rightUniverse) = LoadModuleInUniverse(rightAssemblyFile, File.ReadAllLines(rightRefPathFile));
+var (leftModule, _) = LoadModuleInUniverse(leftAssemblyFile, File.ReadAllLines(leftRefPathFile));
+var (rightModule, _) = LoadModuleInUniverse(rightAssemblyFile, File.ReadAllLines(rightRefPathFile));
 
 var mapping = AssemblyMapper.Create(leftModule.Assembly!, rightModule.Assembly!);
 var comparer = new ApiComparer();

@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AsmResolver.DotNet" Version="6.0.0-development.271" />
+    <PackageReference Include="AsmResolver.DotNet" Version="6.0.0-development.278" />
   </ItemGroup>
 
 </Project>

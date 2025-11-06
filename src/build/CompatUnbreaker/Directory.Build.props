@@ -1,0 +1,16 @@
+<Project>
+    <Sdk Name="OpinionPak.Sdk" Version="0.1.0-ci.51" />
+
+    <PropertyGroup>
+        <UseArtifactsOutput>true</UseArtifactsOutput>
+        <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <Authors>js6pak</Authors>
+        <Copyright>2025 js6pak</Copyright>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/js6pak/CompatUnbreaker</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+    </PropertyGroup>
+</Project>

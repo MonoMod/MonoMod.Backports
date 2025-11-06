@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net$(NETCoreAppMaximumVersion)</TargetFramework>
+        <OutputType>Exe</OutputType>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="TUnit" Version="0.75.30" />
+
+        <ProjectReference Include="..\CompatUnbreaker\CompatUnbreaker.csproj" />
+        <ProjectReference Include="..\CompatUnbreaker.Tool\CompatUnbreaker.Tool.csproj" />
+    </ItemGroup>
+
+    <Target Name="IncludeTestFiles" BeforeTargets="PreBuildEvent">
+        <ItemGroup>
+            <!--            <Compile Remove="TestFiles/**" />-->
+            <EmbeddedResource Include="TestFiles/**" />
+        </ItemGroup>
+    </Target>
+</Project>

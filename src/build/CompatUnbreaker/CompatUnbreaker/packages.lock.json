@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net6.0": {
+      "AsmResolver.DotNet": {
+        "type": "Direct",
+        "requested": "[6.0.0-dev, )",
+        "resolved": "6.0.0-dev",
+        "dependencies": {
+          "AsmResolver.PE": "6.0.0-dev"
+        }
+      },
+      "Meziantou.Analyzer": {
+        "type": "Direct",
+        "requested": "[2.0.220, )",
+        "resolved": "2.0.220",
+        "contentHash": "LknH5tduuxY6jzPGUIBHrszk1fepyEWAD9Ht7Hq1rrGZ02BKx54ADXzrlXTkLNpnkVzRBHU4bO6HH7GwIeDR+w=="
+      },
+      "Microsoft.CodeAnalysis.PublicApiAnalyzers": {
+        "type": "Direct",
+        "requested": "[4.14.0, )",
+        "resolved": "4.14.0",
+        "contentHash": "5zBDSa8D1pfn5VyDzRekcYdVx/DGAzwegblVJhzdN0kvPt97TPr12haA6ZG0wS2WgBb1W42GeZJRiRtlNaoY1w=="
+      },
+      "PolySharp": {
+        "type": "Direct",
+        "requested": "[1.15.0, )",
+        "resolved": "1.15.0",
+        "contentHash": "FbU0El+EEjdpuIX4iDbeS7ki1uzpJPx8vbqOzEtqnl1GZeAGJfq+jCbxeJL2y0EPnUNk8dRnnqR2xnYXg9Tf+g=="
+      },
+      "StyleCop.Analyzers": {
+        "type": "Direct",
+        "requested": "[1.2.0-beta.556, )",
+        "resolved": "1.2.0-beta.556",
+        "contentHash": "llRPgmA1fhC0I0QyFLEcjvtM2239QzKr/tcnbsjArLMJxJlu0AA5G7Fft0OI30pHF3MW63Gf4aSSsjc5m82J1Q==",
+        "dependencies": {
+          "StyleCop.Analyzers.Unstable": "1.2.0.556"
+        }
+      },
+      "AsmResolver": {
+        "type": "Transitive",
+        "resolved": "6.0.0-dev"
+      },
+      "AsmResolver.PE": {
+        "type": "Transitive",
+        "resolved": "6.0.0-dev",
+        "dependencies": {
+          "AsmResolver.PE.File": "6.0.0-dev"
+        }
+      },
+      "AsmResolver.PE.File": {
+        "type": "Transitive",
+        "resolved": "6.0.0-dev",
+        "dependencies": {
+          "AsmResolver": "6.0.0-dev"
+        }
+      },
+      "StyleCop.Analyzers.Unstable": {
+        "type": "Transitive",
+        "resolved": "1.2.0.556",
+        "contentHash": "zvn9Mqs/ox/83cpYPignI8hJEM2A93s2HkHs8HYMOAQW0PkampyoErAiIyKxgTLqbbad29HX/shv/6LGSjPJNQ=="
+      },
+      "compatunbreaker.attributes": {
+        "type": "Project",
+        "dependencies": {
+          "Meziantou.Analyzer": "[2.0.220, )",
+          "PolySharp": "[1.15.0, )",
+          "StyleCop.Analyzers": "[1.2.0-beta.556, )"
+        }
+      }
+    },
+    "net9.0": {
+      "AsmResolver.DotNet": {
+        "type": "Direct",
+        "requested": "[6.0.0-dev, )",
+        "resolved": "6.0.0-dev",
+        "dependencies": {
+          "AsmResolver.PE": "6.0.0-dev"
+        }
+      },
+      "Meziantou.Analyzer": {
+        "type": "Direct",
+        "requested": "[2.0.220, )",
+        "resolved": "2.0.220",
+        "contentHash": "LknH5tduuxY6jzPGUIBHrszk1fepyEWAD9Ht7Hq1rrGZ02BKx54ADXzrlXTkLNpnkVzRBHU4bO6HH7GwIeDR+w=="
+      },
+      "Microsoft.CodeAnalysis.PublicApiAnalyzers": {
+        "type": "Direct",
+        "requested": "[4.14.0, )",
+        "resolved": "4.14.0",
+        "contentHash": "5zBDSa8D1pfn5VyDzRekcYdVx/DGAzwegblVJhzdN0kvPt97TPr12haA6ZG0wS2WgBb1W42GeZJRiRtlNaoY1w=="
+      },
+      "PolySharp": {
+        "type": "Direct",
+        "requested": "[1.15.0, )",
+        "resolved": "1.15.0",
+        "contentHash": "FbU0El+EEjdpuIX4iDbeS7ki1uzpJPx8vbqOzEtqnl1GZeAGJfq+jCbxeJL2y0EPnUNk8dRnnqR2xnYXg9Tf+g=="
+      },
+      "StyleCop.Analyzers": {
+        "type": "Direct",
+        "requested": "[1.2.0-beta.556, )",
+        "resolved": "1.2.0-beta.556",
+        "contentHash": "llRPgmA1fhC0I0QyFLEcjvtM2239QzKr/tcnbsjArLMJxJlu0AA5G7Fft0OI30pHF3MW63Gf4aSSsjc5m82J1Q==",
+        "dependencies": {
+          "StyleCop.Analyzers.Unstable": "1.2.0.556"
+        }
+      },
+      "AsmResolver": {
+        "type": "Transitive",
+        "resolved": "6.0.0-dev"
+      },
+      "AsmResolver.PE": {
+        "type": "Transitive",
+        "resolved": "6.0.0-dev",
+        "dependencies": {
+          "AsmResolver.PE.File": "6.0.0-dev"
+        }
+      },
+      "AsmResolver.PE.File": {
+        "type": "Transitive",
+        "resolved": "6.0.0-dev",
+        "dependencies": {
+          "AsmResolver": "6.0.0-dev"
+        }
+      },
+      "StyleCop.Analyzers.Unstable": {
+        "type": "Transitive",
+        "resolved": "1.2.0.556",
+        "contentHash": "zvn9Mqs/ox/83cpYPignI8hJEM2A93s2HkHs8HYMOAQW0PkampyoErAiIyKxgTLqbbad29HX/shv/6LGSjPJNQ=="
+      },
+      "compatunbreaker.attributes": {
+        "type": "Project",
+        "dependencies": {
+          "Meziantou.Analyzer": "[2.0.220, )",
+          "PolySharp": "[1.15.0, )",
+          "StyleCop.Analyzers": "[1.2.0-beta.556, )"
+        }
+      }
+    }
+  }
+}

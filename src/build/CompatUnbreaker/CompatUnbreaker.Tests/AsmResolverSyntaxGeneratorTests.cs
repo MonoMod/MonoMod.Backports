@@ -1,0 +1,172 @@
+﻿using System.Diagnostics.CodeAnalysis;
+using AsmResolver.DotNet;
+using CompatUnbreaker.Tool.SkeletonGeneration.CodeGeneration;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Editing;
+using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Simplification;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+using Assembly = System.Reflection.Assembly;
+
+namespace CompatUnbreaker.Tests;
+
+public sealed class AsmResolverSyntaxGeneratorTests
+{
+    public static IEnumerable<(string FileName, string Source)> DataSource()
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        var names = assembly.GetManifestResourceNames();
+
+        const string Prefix = "CompatUnbreaker.Tests.TestFiles.";
+
+        foreach (var name in names)
+        {
+            if (!name.StartsWith(Prefix, StringComparison.Ordinal)) continue;
+
+            var fileName = name[Prefix.Length..];
+            using var streamReader = new StreamReader(assembly.GetManifestResourceStream(name)!);
+            var source = streamReader.ReadToEnd();
+
+            yield return (fileName, source);
+        }
+    }
+
+    [Test]
+    [MethodDataSource(nameof(DataSource))]
+    [DisplayName("Roundtrip($fileName)")]
+    public async Task Roundtrip(string fileName, string source)
+    {
+        var bytes = Compile(source, out var sourceSyntaxTree);
+
+        var assemblyDefinition = AssemblyDefinition.FromBytes(bytes);
+
+        using var workspace = new AdhocWorkspace();
+        var project = workspace.AddProject("Test", LanguageNames.CSharp)
+            .WithMetadataReferences(Basic.Reference.Assemblies.Net90.References.All)
+            .WithCompilationOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+                .WithOptimizationLevel(OptimizationLevel.Release)
+                .WithAllowUnsafe(true)
+                .WithNullableContextOptions(NullableContextOptions.Enable));
+
+        project = project.AddDocument("GlobalUsings.g.cs", GlobalUsingsText).Project;
+
+        var addedDocuments = new List<DocumentId>();
+
+        foreach (var module in assemblyDefinition.Modules)
+        {
+            foreach (var type in module.TopLevelTypes)
+            {
+                if (type.IsModuleType || type.IsCompilerGenerated()) continue;
+
+                var syntaxGenerator = SyntaxGenerator.GetGenerator(project);
+                var member = (MemberDeclarationSyntax) syntaxGenerator.Declaration(type);
+
+                if (type.Namespace is { } @namespace)
+                {
+                    member = FileScopedNamespaceDeclaration((NameSyntax) syntaxGenerator.DottedName(@namespace))
+                        .AddMembers(member);
+                }
+
+                var syntaxRoot = CompilationUnit()
+                    .AddMembers(member)
+                    .WithTrailingTrivia(LineFeed)
+                    .WithAdditionalAnnotations(Simplifier.Annotation, Simplifier.AddImportsAnnotation);
+
+                var document = project.AddDocument("TestClass", syntaxRoot);
+                addedDocuments.Add(document.Id);
+                project = document.Project;
+            }
+        }
+
+        foreach (var documentId in addedDocuments)
+        {
+            var document = project.GetDocument(documentId);
+
+            document = await ImportAdder.AddImportsAsync(document);
+            document = await Simplifier.ReduceAsync(document);
+            document = await Formatter.FormatAsync(document);
+
+            var text = (await document.GetTextAsync()).ToString();
+            Console.WriteLine(text);
+
+            var syntaxTree = await document.GetSyntaxTreeAsync();
+            ArgumentNullException.ThrowIfNull(syntaxTree);
+
+            if (!sourceSyntaxTree.IsEquivalentTo(syntaxTree))
+            {
+                await Assert.That(ToStringWithoutTrivia(syntaxTree)).IsEqualTo(ToStringWithoutTrivia(sourceSyntaxTree));
+            }
+
+            project = document.Project;
+        }
+    }
+
+    private static string ToStringWithoutTrivia(SyntaxTree tree)
+    {
+        var syntaxNode = tree.GetRoot();
+        syntaxNode = TriviaRemover.Instance.Visit(syntaxNode);
+        return syntaxNode.NormalizeWhitespace().ToFullString();
+    }
+
+    private sealed class TriviaRemover : CSharpSyntaxRewriter
+    {
+        public static TriviaRemover Instance { get; } = new();
+
+        [return: NotNullIfNotNull(nameof(node))]
+        public override SyntaxNode? Visit(SyntaxNode? node)
+        {
+            return base.Visit(node)?.WithoutTrivia();
+        }
+
+        public override SyntaxTrivia VisitTrivia(SyntaxTrivia trivia)
+        {
+            return SyntaxFactory.Whitespace("");
+        }
+    }
+
+    [StringSyntax(LanguageNames.CSharp)]
+    private const string GlobalUsingsText =
+        """
+        // <auto-generated/>
+        global using System;
+        global using System.Collections.Generic;
+        global using System.IO;
+        global using System.Linq;
+        global using System.Net.Http;
+        global using System.Threading;
+        global using System.Threading.Tasks;
+        """;
+
+    private static byte[] Compile([StringSyntax(LanguageNames.CSharp)] string source, out SyntaxTree syntaxTree)
+    {
+        var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+            .WithOptimizationLevel(OptimizationLevel.Release)
+            .WithAllowUnsafe(true)
+            .WithNullableContextOptions(NullableContextOptions.Enable);
+
+        var references = Basic.Reference.Assemblies.Net90.References.All;
+
+        syntaxTree = ParseSyntaxTree(source);
+
+        var globalUsings = ParseSyntaxTree(GlobalUsingsText);
+
+        var compilation = CSharpCompilation.Create("Test", [globalUsings, syntaxTree], references, compilationOptions);
+
+        var stream = new MemoryStream();
+
+        var emitResult = compilation.Emit(stream);
+        if (!emitResult.Success)
+        {
+            foreach (var diagnostic in emitResult.Diagnostics)
+            {
+                Console.WriteLine(diagnostic);
+            }
+
+            throw new Exception();
+        }
+
+        return stream.GetBuffer();
+    }
+}

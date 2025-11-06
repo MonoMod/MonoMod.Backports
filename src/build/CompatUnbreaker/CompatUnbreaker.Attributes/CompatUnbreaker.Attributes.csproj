@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <IsPackable>true</IsPackable>
+        <TargetFrameworks>net9.0;netstandard2.0;net35</TargetFrameworks>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Avoid System.Threading.Tasks because of net35 -->
+        <Using Remove="System.Threading.Tasks" />
+    </ItemGroup>
+</Project>

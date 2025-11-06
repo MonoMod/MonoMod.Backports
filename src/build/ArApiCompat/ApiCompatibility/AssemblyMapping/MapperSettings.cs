@@ -1,8 +1,7 @@
+using ArApiCompat.Utilities.AsmResolver;
 using AsmResolver.DotNet;
-using CompatUnbreaker.Tool.Utilities.AsmResolver;
-using CompatUnbreaker.Utilities.AsmResolver;
 
-namespace CompatUnbreaker.Tool.ApiCompatibility.AssemblyMapping;
+namespace ArApiCompat.ApiCompatibility.AssemblyMapping;
 
 public sealed class MapperSettings
 {
@@ -10,7 +9,6 @@ public sealed class MapperSettings
 
     private static bool DefaultFilter(IMemberDefinition member)
     {
-        return member.IsVisibleOutsideOfAssembly() &&
-               (member is not TypeDefinition type || type.Namespace != "System.Runtime.CompilerServices");
+        return member.IsVisibleOutsideOfAssembly();
     }
 }

@@ -2,7 +2,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 
-namespace CompatUnbreaker.Tool.Utilities.AsmResolver;
+namespace ArApiCompat.Utilities.AsmResolver;
 
 internal static class MethodDefinitionExtensions
 {

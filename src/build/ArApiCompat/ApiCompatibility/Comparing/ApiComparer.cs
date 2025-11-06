@@ -1,7 +1,7 @@
-using CompatUnbreaker.Tool.ApiCompatibility.AssemblyMapping;
-using CompatUnbreaker.Tool.ApiCompatibility.Comparing.Rules;
+using ArApiCompat.ApiCompatibility.AssemblyMapping;
+using ArApiCompat.ApiCompatibility.Comparing.Rules;
 
-namespace CompatUnbreaker.Tool.ApiCompatibility.Comparing;
+namespace ArApiCompat.ApiCompatibility.Comparing;
 
 public sealed class ApiComparer
 {
@@ -25,6 +25,8 @@ public sealed class ApiComparer
 
     public void Compare(AssemblyMapper assemblyMapper)
     {
+        ArgumentNullException.ThrowIfNull(assemblyMapper);
+
         AddDifferences(assemblyMapper);
 
         foreach (var typeMapper in assemblyMapper.Types)

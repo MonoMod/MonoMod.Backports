@@ -1,6 +1,6 @@
 using AsmResolver.PE.DotNet.Cil;
 
-namespace CompatUnbreaker.Tool.Utilities.AsmResolver;
+namespace ArApiCompat.Utilities.AsmResolver;
 
 internal static class MiscellaneousExtensions
 {

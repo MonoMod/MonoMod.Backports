@@ -1,4 +1,4 @@
-namespace CompatUnbreaker.Tool.ApiCompatibility.AssemblyMapping;
+namespace ArApiCompat.ApiCompatibility.AssemblyMapping;
 
 public enum ElementSide : byte
 {

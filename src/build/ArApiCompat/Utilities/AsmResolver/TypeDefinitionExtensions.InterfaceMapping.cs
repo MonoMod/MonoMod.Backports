@@ -1,3 +1,4 @@
+using ArApiCompat.Utilities.AsmResolver;
 using AsmResolver.DotNet;
 
 namespace CompatUnbreaker.Tool.Utilities.AsmResolver;

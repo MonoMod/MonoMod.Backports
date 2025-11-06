@@ -1,6 +1,6 @@
 using AsmResolver.DotNet;
 
-namespace CompatUnbreaker.Utilities.AsmResolver;
+namespace ArApiCompat.Utilities.AsmResolver;
 
 internal static class VisibilityExtensions
 {

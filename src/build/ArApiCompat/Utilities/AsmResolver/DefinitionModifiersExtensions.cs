@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
+using ArApiCompat.Utilities.AsmResolver;
 using AsmResolver.DotNet;
 
 namespace CompatUnbreaker.Tool.Utilities.AsmResolver;

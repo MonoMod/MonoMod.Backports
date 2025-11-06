@@ -1,7 +1,9 @@
-namespace CompatUnbreaker.Tool.ApiCompatibility.AssemblyMapping;
+namespace ArApiCompat.ApiCompatibility.AssemblyMapping;
 
-public abstract class ElementMapper<T>
+public abstract class ElementMapper<T>(MapperSettings mapperSettings)
 {
+    public MapperSettings MapperSettings { get; } = mapperSettings;
+
     public T? Left { get; set; }
     public T? Right { get; set; }
 

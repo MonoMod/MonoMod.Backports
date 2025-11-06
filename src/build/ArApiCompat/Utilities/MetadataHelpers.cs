@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace CompatUnbreaker.Tool.Utilities;
+namespace ArApiCompat.Utilities;
 
 // Copied from https://github.com/dotnet/roslyn/blob/7c625024a1984d9f04f317940d518402f5898758/src/Compilers/Core/Portable/MetadataReader/MetadataHelpers.cs
 

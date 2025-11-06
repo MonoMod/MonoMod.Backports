@@ -1,11 +1,9 @@
+using ArApiCompat.ApiCompatibility.AssemblyMapping;
+using ArApiCompat.Utilities.AsmResolver;
 using AsmResolver.DotNet;
-using CompatUnbreaker.Tool.ApiCompatibility.AssemblyMapping;
-using CompatUnbreaker.Tool.Utilities.AsmResolver;
-using CompatUnbreaker.Utilities.AsmResolver;
-//using Microsoft.CodeAnalysis;
-using Accessibility = CompatUnbreaker.Utilities.AsmResolver.Accessibility;
+using Accessibility = ArApiCompat.Utilities.AsmResolver.Accessibility;
 
-namespace CompatUnbreaker.Tool.ApiCompatibility.Comparing.Rules;
+namespace ArApiCompat.ApiCompatibility.Comparing.Rules;
 
 public sealed class CannotReduceVisibilityDifference(IMemberDefinition left, IMemberDefinition right) : CompatDifference
 {

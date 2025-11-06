@@ -1,8 +1,8 @@
 using AsmResolver.DotNet;
 
-namespace CompatUnbreaker.Tool.ApiCompatibility.AssemblyMapping;
+namespace ArApiCompat.ApiCompatibility.AssemblyMapping;
 
-public sealed class MemberMapper(MapperSettings settings, TypeMapper declaringType) : ElementMapper<IMemberDefinition>
+public sealed class MemberMapper(MapperSettings settings, TypeMapper declaringType) : ElementMapper<IMemberDefinition>(settings)
 {
     public TypeMapper DeclaringType { get; } = declaringType;
 }

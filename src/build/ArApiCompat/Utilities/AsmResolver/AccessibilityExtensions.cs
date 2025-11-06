@@ -1,7 +1,7 @@
 using AsmResolver.DotNet;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 
-namespace CompatUnbreaker.Utilities.AsmResolver;
+namespace ArApiCompat.Utilities.AsmResolver;
 
 internal static class AccessibilityExtensions
 {
@@ -30,7 +30,7 @@ internal static class AccessibilityExtensions
             TypeAttributes.NestedAssembly => Accessibility.Internal,
             TypeAttributes.NestedFamilyAndAssembly => Accessibility.ProtectedAndInternal,
             TypeAttributes.NestedFamilyOrAssembly => Accessibility.ProtectedOrInternal,
-            _ => throw new Exception(),
+            _ => throw new ArgumentOutOfRangeException(nameof(type)),
         };
     }
 
@@ -44,7 +44,7 @@ internal static class AccessibilityExtensions
             MethodAttributes.Family => Accessibility.Protected,
             MethodAttributes.FamilyOrAssembly => Accessibility.ProtectedOrInternal,
             MethodAttributes.Public => Accessibility.Public,
-            _ => throw new Exception(),
+            _ => throw new ArgumentOutOfRangeException(nameof(method)),
         };
     }
 
@@ -58,7 +58,7 @@ internal static class AccessibilityExtensions
             FieldAttributes.Family => Accessibility.Protected,
             FieldAttributes.FamilyOrAssembly => Accessibility.ProtectedOrInternal,
             FieldAttributes.Public => Accessibility.Public,
-            _ => throw new Exception(),
+            _ => throw new ArgumentOutOfRangeException(nameof(field)),
         };
     }
 

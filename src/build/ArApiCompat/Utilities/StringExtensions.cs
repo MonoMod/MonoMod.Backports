@@ -1,4 +1,4 @@
-namespace CompatUnbreaker.Tool.Utilities;
+namespace ArApiCompat.Utilities;
 
 internal static class StringExtensions
 {

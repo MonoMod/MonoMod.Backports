@@ -1,7 +1,7 @@
+using ArApiCompat.ApiCompatibility.AssemblyMapping;
 using AsmResolver.DotNet;
-using CompatUnbreaker.Tool.ApiCompatibility.AssemblyMapping;
 
-namespace CompatUnbreaker.Tool.ApiCompatibility.Comparing;
+namespace ArApiCompat.ApiCompatibility.Comparing;
 
 public abstract class CompatDifference
 {

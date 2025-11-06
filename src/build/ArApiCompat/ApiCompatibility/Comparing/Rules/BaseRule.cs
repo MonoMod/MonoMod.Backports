@@ -1,6 +1,6 @@
-using CompatUnbreaker.Tool.ApiCompatibility.AssemblyMapping;
+using ArApiCompat.ApiCompatibility.AssemblyMapping;
 
-namespace CompatUnbreaker.Tool.ApiCompatibility.Comparing.Rules;
+namespace ArApiCompat.ApiCompatibility.Comparing.Rules;
 
 public abstract class BaseRule
 {

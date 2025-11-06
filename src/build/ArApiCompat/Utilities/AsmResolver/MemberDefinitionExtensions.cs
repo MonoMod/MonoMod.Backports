@@ -1,6 +1,6 @@
 using AsmResolver.DotNet;
 
-namespace CompatUnbreaker.Tool.Utilities.AsmResolver;
+namespace ArApiCompat.Utilities.AsmResolver;
 
 internal static class MemberDefinitionExtensions
 {

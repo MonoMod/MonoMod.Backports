@@ -1,9 +1,10 @@
+using ArApiCompat.Utilities.AsmResolver;
 using AsmResolver.DotNet;
 using CompatUnbreaker.Tool.Utilities.AsmResolver;
 
-namespace CompatUnbreaker.Tool.ApiCompatibility.AssemblyMapping;
+namespace ArApiCompat.ApiCompatibility.AssemblyMapping;
 
-public sealed class TypeMapper(MapperSettings settings, TypeMapper? declaringType = null) : ElementMapper<TypeDefinition>
+public sealed class TypeMapper(MapperSettings MapperSettings, TypeMapper? declaringType = null) : ElementMapper<TypeDefinition>(MapperSettings)
 {
     private readonly Dictionary<ITypeDescriptor, TypeMapper> _nestedTypes = new(ExtendedSignatureComparer.VersionAgnostic);
     private readonly Dictionary<IMemberDescriptor, MemberMapper> _members = new(ExtendedSignatureComparer.VersionAgnostic);
@@ -19,7 +20,7 @@ public sealed class TypeMapper(MapperSettings settings, TypeMapper? declaringTyp
 
         foreach (var member in value.GetMembers(includeNestedTypes: false))
         {
-            if (settings.Filter(member))
+            if (MapperSettings.Filter(member))
             {
                 AddOrCreateMapper(member, side);
             }
@@ -27,7 +28,7 @@ public sealed class TypeMapper(MapperSettings settings, TypeMapper? declaringTyp
 
         foreach (var nestedType in value.NestedTypes)
         {
-            if (settings.Filter(nestedType))
+            if (MapperSettings.Filter(nestedType))
             {
                 AddOrCreateMapper(nestedType, side);
             }
@@ -38,7 +39,7 @@ public sealed class TypeMapper(MapperSettings settings, TypeMapper? declaringTyp
     {
         if (!_nestedTypes.TryGetValue(nestedType, out var mapper))
         {
-            mapper = new TypeMapper(settings, this);
+            mapper = new TypeMapper(MapperSettings, this);
             _nestedTypes.Add(nestedType, mapper);
         }
 
@@ -49,7 +50,7 @@ public sealed class TypeMapper(MapperSettings settings, TypeMapper? declaringTyp
     {
         if (!_members.TryGetValue(member, out var mapper))
         {
-            mapper = new MemberMapper(settings, this);
+            mapper = new MemberMapper(MapperSettings, this);
             _members.Add(member, mapper);
         }
 

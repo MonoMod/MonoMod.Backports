@@ -1,4 +1,4 @@
-namespace CompatUnbreaker.Tool.ApiCompatibility.Comparing;
+namespace ArApiCompat.ApiCompatibility.Comparing;
 
 public enum DifferenceType
 {

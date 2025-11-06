@@ -1,9 +1,9 @@
+using ArApiCompat.Utilities.AsmResolver;
 using AsmResolver.DotNet;
-using CompatUnbreaker.Tool.Utilities.AsmResolver;
 
-namespace CompatUnbreaker.Tool.ApiCompatibility.AssemblyMapping;
+namespace ArApiCompat.ApiCompatibility.AssemblyMapping;
 
-public sealed class AssemblyMapper(MapperSettings settings) : ElementMapper<AssemblyDefinition>
+public sealed class AssemblyMapper(MapperSettings MapperSettings) : ElementMapper<AssemblyDefinition>(MapperSettings)
 {
     private readonly Dictionary<ITypeDescriptor, TypeMapper> _types = new(ExtendedSignatureComparer.VersionAgnostic);
 
@@ -17,8 +17,9 @@ public sealed class AssemblyMapper(MapperSettings settings) : ElementMapper<Asse
         {
             foreach (var type in module.TopLevelTypes)
             {
-                if (type.Namespace is null || !type.Namespace.Value.StartsWith("System.Threading.Tasks")) continue;
-                if (settings.Filter(type))
+                if (type.Namespace is null) continue;
+
+                if (MapperSettings.Filter(type))
                 {
                     AddOrCreateMapper(type, side);
                 }
@@ -33,7 +34,7 @@ public sealed class AssemblyMapper(MapperSettings settings) : ElementMapper<Asse
                     return;
                 }
 
-                if (settings.Filter(type))
+                if (MapperSettings.Filter(type))
                 {
                     AddOrCreateMapper(type, side);
                 }
@@ -45,7 +46,7 @@ public sealed class AssemblyMapper(MapperSettings settings) : ElementMapper<Asse
     {
         if (!_types.TryGetValue(type, out var mapper))
         {
-            mapper = new TypeMapper(settings);
+            mapper = new TypeMapper(MapperSettings);
             _types.Add(type, mapper);
         }
 

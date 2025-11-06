@@ -1,9 +1,9 @@
+using ArApiCompat.ApiCompatibility.AssemblyMapping;
+using ArApiCompat.Utilities.AsmResolver;
 using AsmResolver.DotNet;
-using CompatUnbreaker.Tool.ApiCompatibility.AssemblyMapping;
 using CompatUnbreaker.Tool.Utilities.AsmResolver;
-using CompatUnbreaker.Utilities.AsmResolver;
 
-namespace CompatUnbreaker.Tool.ApiCompatibility.Comparing.Rules;
+namespace ArApiCompat.ApiCompatibility.Comparing.Rules;
 
 public sealed class CannotRemoveBaseTypeDifference(TypeMapper mapper) : TypeCompatDifference(mapper)
 {
@@ -37,7 +37,7 @@ public sealed class CannotRemoveBaseTypeOrInterface : BaseRule
         ValidateInterfaceNotRemoved(mapper, differences);
     }
 
-    private void ValidateBaseTypeNotRemoved(TypeMapper mapper, IList<CompatDifference> differences)
+    private static void ValidateBaseTypeNotRemoved(TypeMapper mapper, IList<CompatDifference> differences)
     {
         var (left, right) = mapper;
 
@@ -64,7 +64,7 @@ public sealed class CannotRemoveBaseTypeOrInterface : BaseRule
         differences.Add(new CannotRemoveBaseTypeDifference(mapper));
     }
 
-    private void ValidateInterfaceNotRemoved(TypeMapper mapper, IList<CompatDifference> differences)
+    private static void ValidateInterfaceNotRemoved(TypeMapper mapper, IList<CompatDifference> differences)
     {
         var (left, right) = mapper;
 

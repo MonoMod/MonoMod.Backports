@@ -1,8 +1,8 @@
+using ArApiCompat.ApiCompatibility.AssemblyMapping;
+using ArApiCompat.Utilities.AsmResolver;
 using AsmResolver.DotNet;
-using CompatUnbreaker.Tool.ApiCompatibility.AssemblyMapping;
-using CompatUnbreaker.Tool.Utilities.AsmResolver;
 
-namespace CompatUnbreaker.Tool.ApiCompatibility.Comparing.Rules;
+namespace ArApiCompat.ApiCompatibility.Comparing.Rules;
 
 public sealed class EnumTypesMustMatch(TypeMapper mapper) : TypeCompatDifference(mapper)
 {

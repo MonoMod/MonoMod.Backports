@@ -1,8 +1,7 @@
-using CompatUnbreaker.Tool.ApiCompatibility.AssemblyMapping;
-using CompatUnbreaker.Tool.Utilities.AsmResolver;
-using CompatUnbreaker.Utilities.AsmResolver;
+using ArApiCompat.ApiCompatibility.AssemblyMapping;
+using ArApiCompat.Utilities.AsmResolver;
 
-namespace CompatUnbreaker.Tool.ApiCompatibility.Comparing.Rules;
+namespace ArApiCompat.ApiCompatibility.Comparing.Rules;
 
 public sealed class CannotSealTypeDifference(TypeMapper mapper) : TypeCompatDifference(mapper)
 {

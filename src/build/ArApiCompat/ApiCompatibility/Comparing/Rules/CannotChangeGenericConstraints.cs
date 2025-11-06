@@ -1,15 +1,17 @@
 using System.Diagnostics;
+using ArApiCompat.ApiCompatibility.AssemblyMapping;
+using ArApiCompat.Utilities.AsmResolver;
 using AsmResolver.DotNet;
-using CompatUnbreaker.Tool.ApiCompatibility.AssemblyMapping;
-using CompatUnbreaker.Tool.Utilities.AsmResolver;
 
-namespace CompatUnbreaker.Tool.ApiCompatibility.Comparing.Rules;
+namespace ArApiCompat.ApiCompatibility.Comparing.Rules;
 
+#pragma warning disable CS9113 // Parameter is unread.
 public sealed class CannotChangeGenericConstraintDifference(DifferenceType type, IMemberDefinition left, IMemberDefinition right, GenericParameter leftTypeParameter, string constraint) : CompatDifference
 {
     public override string Message => $"Cannot {(type == DifferenceType.Added ? "add" : "remove")} constraint '{constraint}' on type parameter '{leftTypeParameter}' of '{left}'";
     public override DifferenceType Type => type;
 }
+#pragma warning restore CS9113 // Parameter is unread.
 
 public sealed class CannotChangeGenericConstraints : BaseRule
 {
@@ -44,7 +46,7 @@ public sealed class CannotChangeGenericConstraints : BaseRule
         CompareTypeParameters(leftTypeParameters, rightTypeParameters, left, right, permitConstraintRemoval, differences);
     }
 
-    private void CompareTypeParameters(
+    private static void CompareTypeParameters(
         IList<GenericParameter> leftTypeParameters,
         IList<GenericParameter> rightTypeParameters,
         IMemberDefinition left,

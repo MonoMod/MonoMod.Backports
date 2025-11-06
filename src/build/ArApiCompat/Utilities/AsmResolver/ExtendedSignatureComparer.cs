@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 
-namespace CompatUnbreaker.Tool.Utilities.AsmResolver;
+namespace ArApiCompat.Utilities.AsmResolver;
 
 // TODO upstream?
 

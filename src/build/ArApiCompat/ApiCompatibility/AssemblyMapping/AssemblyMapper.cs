@@ -17,8 +17,6 @@ public sealed class AssemblyMapper(MapperSettings MapperSettings) : ElementMappe
         {
             foreach (var type in module.TopLevelTypes)
             {
-                if (type.Namespace is null) continue;
-
                 if (MapperSettings.Filter(type))
                 {
                     AddOrCreateMapper(type, side);

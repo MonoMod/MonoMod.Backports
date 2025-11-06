@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.Build.NoTargets">
+<Project Sdk="Microsoft.Build.NoTargets">
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
@@ -41,5 +41,4 @@
       <ProjectReference Include="$(MMSourcePath)MonoMod.Backports\MonoMod.Backports.csproj" ReferenceOutputAssembly="true" />
     </ItemGroup>
   </Target>
-
 </Project>

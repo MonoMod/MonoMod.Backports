@@ -1,8 +1,5 @@
-﻿using ArApiCompat.ApiCompatibility.AssemblyMapping;
-using ArApiCompat.ApiCompatibility.Comparing;
+﻿using ArApiCompat;
 using ArApiCompat.ApiCompatibility.Suppressions;
-using AsmResolver.DotNet;
-using AsmResolver.DotNet.Serialized;
 using System.Xml.Linq;
 
 Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
@@ -16,131 +13,58 @@ if (args is not [{ } suppressionFile, { } leftAssemblyFile, { } leftRefPathFile,
 
 var writeSuppression = rest is ["--write-suppressions", ..];
 
-var (leftModule, _) = LoadModuleInUniverse(leftAssemblyFile, File.ReadAllLines(leftRefPathFile));
-var (rightModule, _) = LoadModuleInUniverse(rightAssemblyFile, File.ReadAllLines(rightRefPathFile));
-
-var mapping = AssemblyMapper.Create(leftModule.Assembly!, rightModule.Assembly!);
-var comparer = new ApiComparer();
-comparer.Compare(mapping);
-
-var existingSuppressions = new SuppressionFile();
-if (!writeSuppression && File.Exists(suppressionFile))
-{
-    existingSuppressions = SuppressionFile.Deserialize(XDocument.Load(suppressionFile));
-}
-
-var reportedErrorSuppressions = new SuppressionFile();
-// TODO: multiple comparisons at once
-var comparison = new SuppressionFile.Comparison()
-{
-    Left = leftAssemblyFile,
-    Right = rightAssemblyFile,
-};
-reportedErrorSuppressions.Comparisons.Add(comparison);
-
-var differenceMap = new Dictionary<SuppressionFile.Suppression, CompatDifference>();
-foreach (var diff in comparer.CompatDifferences)
-{
-    var suppression = new SuppressionFile.Suppression()
-    {
-        DifferenceType = diff.Type,
-        TypeName = diff.GetType().FullName,
-        Message = diff.Message,
-    };
-    comparison.Suppressions.Add(suppression);
-    differenceMap.Add(suppression, diff);
-}
-
-reportedErrorSuppressions.Sort();
-
-if (!writeSuppression)
-{
-    // suppress things
-    var unsuppressed = reportedErrorSuppressions.RemoveSuppressionsFrom(existingSuppressions, out var hasUnused);
-
-    foreach (var c in unsuppressed.Comparisons)
-    {
-        foreach (var s in c.Suppressions)
-        {
-            Console.WriteLine(differenceMap[s]);
-        }
-    }
-
-    if (hasUnused)
-    {
-        // TODO: report error
-        Console.WriteLine("suppressions file had unused suppressions");
-    }
-}
+var result = ComparisonResult.Execute(
+    [
+        new(
+            Path.GetFileName(Path.GetDirectoryName(leftAssemblyFile)) ?? leftAssemblyFile,
+            leftAssemblyFile,
+            File.ReadAllLines(leftRefPathFile),
+            Path.GetFileName(Path.GetDirectoryName(rightAssemblyFile)) ?? leftAssemblyFile,
+            rightAssemblyFile,
+            File.ReadAllLines(rightRefPathFile)
+            )
+    ],
+    File.Exists(suppressionFile)
+    ? SuppressionFile.Deserialize(XDocument.Load(suppressionFile))
+    : null);
 
 if (writeSuppression)
 {
-    // write the suppressions
-    var xdoc = reportedErrorSuppressions.Serialize();
-    xdoc.Save(suppressionFile, SaveOptions.OmitDuplicateNamespaces);
+    var suppressions = result.GetSuppressionFile();
+    var doc = suppressions.Serialize();
+    doc.Save(suppressionFile, SaveOptions.OmitDuplicateNamespaces);
+
+    return 0;
 }
-
-return 0;
-
-static (ModuleDefinition module, RuntimeContext universe) LoadModuleInUniverse(string file, string[] referencePath)
+else
 {
-    var module = (SerializedModuleDefinition)ModuleDefinition.FromFile(file);
-    var proxyResolver = new ForwardingAssemblyResolver();
-    var universe = new RuntimeContext(module.RuntimeContext.TargetRuntime, proxyResolver);
-    var assemblyResolver = new ReferencePathAsemblyResolver(new() { RuntimeContext = universe }, referencePath);
-    proxyResolver.Target = assemblyResolver;
-    module = (SerializedModuleDefinition)ModuleDefinition.FromFile(file, universe.DefaultReaderParameters);
-
-    return (module, universe);
-}
-
-sealed class ReferencePathAsemblyResolver(ModuleReaderParameters mrp, string[] referencePath) : AssemblyResolverBase(mrp)
-{
-    protected override AssemblyDefinition? ResolveImpl(AssemblyDescriptor assembly)
+    var anyError = false;
+    for (var i = 0; i < result.JobCount; i++)
     {
-        foreach (var file in referencePath)
+        var job = result.Jobs[i];
+        var differences = result.GetDifferences(i);
+        if (differences.Count > 0)
         {
-            if (Path.GetFileNameWithoutExtension(file).Equals(assembly.Name?.Value.ToUpperInvariant(), StringComparison.OrdinalIgnoreCase))
+            anyError = true;
+            Console.WriteLine($"error : Compatability errors between '{job.LeftName}' and '{job.RightName}':");
+
+            foreach (var difference in differences)
             {
-                return LoadAssemblyFromFile(file);
+                Console.WriteLine($"error {difference}");
             }
+
+            Console.WriteLine("---");
         }
-
-        return null;
+        else
+        {
+            // no differences, don't report anything
+        }
     }
 
-    protected override string? ProbeRuntimeDirectories(AssemblyDescriptor assembly)
+    if (result.HasUnusedSuppressions)
     {
-        throw new NotImplementedException();
-    }
-}
-
-sealed class ForwardingAssemblyResolver : IAssemblyResolver
-{
-    public IAssemblyResolver? Target { get; set; }
-
-    public void AddToCache(AssemblyDescriptor descriptor, AssemblyDefinition definition)
-    {
-        Target?.AddToCache(descriptor, definition);
+        Console.WriteLine($"warning : Suppressions file '{suppressionFile}' has unused suppressions. Regenerate it by passing --write-suppressions to ArApiCompat.");
     }
 
-    public void ClearCache()
-    {
-        Target?.ClearCache();
-    }
-
-    public bool HasCached(AssemblyDescriptor descriptor)
-    {
-        return Target?.HasCached(descriptor) ?? false;
-    }
-
-    public bool RemoveFromCache(AssemblyDescriptor descriptor)
-    {
-        return Target?.RemoveFromCache(descriptor) ?? false;
-    }
-
-    public AssemblyDefinition? Resolve(AssemblyDescriptor assembly)
-    {
-        return Target?.Resolve(assembly);
-    }
+    return anyError ? 1 : 0;
 }

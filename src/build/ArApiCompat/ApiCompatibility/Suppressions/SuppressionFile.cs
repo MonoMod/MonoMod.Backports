@@ -12,6 +12,9 @@ internal sealed class SuppressionFile
         public string? Right { get; set; }
 
         public List<Suppression> Suppressions { get; } = new();
+
+        public Suppression? GetSuppressionFor(Suppression suppression)
+            => Suppressions.FirstOrDefault(s => s == suppression);
     }
 
     public sealed record Suppression

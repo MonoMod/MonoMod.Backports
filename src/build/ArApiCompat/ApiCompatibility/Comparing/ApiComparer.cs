@@ -21,7 +21,7 @@ public sealed class ApiComparer
 
     private readonly List<CompatDifference> _compatDifferences = [];
 
-    public IEnumerable<CompatDifference> CompatDifferences => _compatDifferences;
+    public IReadOnlyList<CompatDifference> CompatDifferences => _compatDifferences;
 
     public void Compare(AssemblyMapper assemblyMapper)
     {

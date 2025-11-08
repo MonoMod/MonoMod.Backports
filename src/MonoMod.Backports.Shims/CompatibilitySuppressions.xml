@@ -1,52 +1,83 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!-- https://learn.microsoft.com/dotnet/fundamentals/package-validation/diagnostic-ids -->
-<Suppressions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <Suppression>
-    <DiagnosticId>CP0021</DiagnosticId>
-    <Target>M:System.Runtime.CompilerServices.Unsafe.Unbox``1(System.Object)``0:struct</Target>
-    <Left>net45 baseline</Left>
-    <Right>net45 shimmed</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0021</DiagnosticId>
-    <Target>M:System.Runtime.CompilerServices.Unsafe.Unbox``1(System.Object)``0:struct</Target>
-    <Left>net452 baseline</Left>
-    <Right>net452 shimmed</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0021</DiagnosticId>
-    <Target>M:System.Runtime.CompilerServices.Unsafe.Unbox``1(System.Object)``0:struct</Target>
-    <Left>net461 baseline</Left>
-    <Right>net461 shimmed</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0021</DiagnosticId>
-    <Target>M:System.Runtime.CompilerServices.Unsafe.Unbox``1(System.Object)``0:struct</Target>
-    <Left>net5.0 baseline</Left>
-    <Right>net5.0 shimmed</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0021</DiagnosticId>
-    <Target>M:System.Runtime.CompilerServices.Unsafe.Unbox``1(System.Object)``0:struct</Target>
-    <Left>netcoreapp2.0 baseline</Left>
-    <Right>netcoreapp2.0 shimmed</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0021</DiagnosticId>
-    <Target>M:System.Runtime.CompilerServices.Unsafe.Unbox``1(System.Object)``0:struct</Target>
-    <Left>netcoreapp2.1 baseline</Left>
-    <Right>netcoreapp2.1 shimmed</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0021</DiagnosticId>
-    <Target>M:System.Runtime.CompilerServices.Unsafe.Unbox``1(System.Object)``0:struct</Target>
-    <Left>netcoreapp3.0 baseline</Left>
-    <Right>netcoreapp3.0 shimmed</Right>
-  </Suppression>
-  <Suppression>
-    <DiagnosticId>CP0021</DiagnosticId>
-    <Target>M:System.Runtime.CompilerServices.Unsafe.Unbox``1(System.Object)``0:struct</Target>
-    <Left>netcoreapp3.1 baseline</Left>
-    <Right>netcoreapp3.1 shimmed</Right>
-  </Suppression>
-</Suppressions>
+<ArCompatSuppressions>
+  <Comparison Left="net45 baseline" Right="net45 shimmed">
+    <Suppression DifferenceType="Added">
+      <TypeName>ArApiCompat.ApiCompatibility.Comparing.Rules.CannotChangeGenericConstraintDifference</TypeName>
+      <Message>Cannot add constraint 'new()' on type parameter 'T' of '!!0&amp; System.Runtime.CompilerServices.Unsafe::Unbox&lt;T&gt;(System.Object)'</Message>
+    </Suppression>
+    <Suppression DifferenceType="Added">
+      <TypeName>ArApiCompat.ApiCompatibility.Comparing.Rules.CannotChangeGenericConstraintDifference</TypeName>
+      <Message>Cannot add constraint 'struct' on type parameter 'T' of '!!0&amp; System.Runtime.CompilerServices.Unsafe::Unbox&lt;T&gt;(System.Object)'</Message>
+    </Suppression>
+  </Comparison>
+  <Comparison Left="net452 baseline" Right="net452 shimmed">
+    <Suppression DifferenceType="Added">
+      <TypeName>ArApiCompat.ApiCompatibility.Comparing.Rules.CannotChangeGenericConstraintDifference</TypeName>
+      <Message>Cannot add constraint 'new()' on type parameter 'T' of '!!0&amp; System.Runtime.CompilerServices.Unsafe::Unbox&lt;T&gt;(System.Object)'</Message>
+    </Suppression>
+    <Suppression DifferenceType="Added">
+      <TypeName>ArApiCompat.ApiCompatibility.Comparing.Rules.CannotChangeGenericConstraintDifference</TypeName>
+      <Message>Cannot add constraint 'struct' on type parameter 'T' of '!!0&amp; System.Runtime.CompilerServices.Unsafe::Unbox&lt;T&gt;(System.Object)'</Message>
+    </Suppression>
+  </Comparison>
+  <Comparison Left="net461 baseline" Right="net461 shimmed">
+    <Suppression DifferenceType="Added">
+      <TypeName>ArApiCompat.ApiCompatibility.Comparing.Rules.CannotChangeGenericConstraintDifference</TypeName>
+      <Message>Cannot add constraint 'new()' on type parameter 'T' of '!!0&amp; System.Runtime.CompilerServices.Unsafe::Unbox&lt;T&gt;(System.Object)'</Message>
+    </Suppression>
+    <Suppression DifferenceType="Added">
+      <TypeName>ArApiCompat.ApiCompatibility.Comparing.Rules.CannotChangeGenericConstraintDifference</TypeName>
+      <Message>Cannot add constraint 'struct' on type parameter 'T' of '!!0&amp; System.Runtime.CompilerServices.Unsafe::Unbox&lt;T&gt;(System.Object)'</Message>
+    </Suppression>
+  </Comparison>
+  <Comparison Left="net5.0 baseline" Right="net5.0 shimmed">
+    <Suppression DifferenceType="Added">
+      <TypeName>ArApiCompat.ApiCompatibility.Comparing.Rules.CannotChangeGenericConstraintDifference</TypeName>
+      <Message>Cannot add constraint 'new()' on type parameter 'T' of '!!0&amp; System.Runtime.CompilerServices.Unsafe::Unbox&lt;T&gt;(System.Object)'</Message>
+    </Suppression>
+    <Suppression DifferenceType="Added">
+      <TypeName>ArApiCompat.ApiCompatibility.Comparing.Rules.CannotChangeGenericConstraintDifference</TypeName>
+      <Message>Cannot add constraint 'struct' on type parameter 'T' of '!!0&amp; System.Runtime.CompilerServices.Unsafe::Unbox&lt;T&gt;(System.Object)'</Message>
+    </Suppression>
+  </Comparison>
+  <Comparison Left="netcoreapp2.0 baseline" Right="netcoreapp2.0 shimmed">
+    <Suppression DifferenceType="Added">
+      <TypeName>ArApiCompat.ApiCompatibility.Comparing.Rules.CannotChangeGenericConstraintDifference</TypeName>
+      <Message>Cannot add constraint 'new()' on type parameter 'T' of '!!0&amp; System.Runtime.CompilerServices.Unsafe::Unbox&lt;T&gt;(System.Object)'</Message>
+    </Suppression>
+    <Suppression DifferenceType="Added">
+      <TypeName>ArApiCompat.ApiCompatibility.Comparing.Rules.CannotChangeGenericConstraintDifference</TypeName>
+      <Message>Cannot add constraint 'struct' on type parameter 'T' of '!!0&amp; System.Runtime.CompilerServices.Unsafe::Unbox&lt;T&gt;(System.Object)'</Message>
+    </Suppression>
+  </Comparison>
+  <Comparison Left="netcoreapp2.1 baseline" Right="netcoreapp2.1 shimmed">
+    <Suppression DifferenceType="Added">
+      <TypeName>ArApiCompat.ApiCompatibility.Comparing.Rules.CannotChangeGenericConstraintDifference</TypeName>
+      <Message>Cannot add constraint 'new()' on type parameter 'T' of '!!0&amp; System.Runtime.CompilerServices.Unsafe::Unbox&lt;T&gt;(System.Object)'</Message>
+    </Suppression>
+    <Suppression DifferenceType="Added">
+      <TypeName>ArApiCompat.ApiCompatibility.Comparing.Rules.CannotChangeGenericConstraintDifference</TypeName>
+      <Message>Cannot add constraint 'struct' on type parameter 'T' of '!!0&amp; System.Runtime.CompilerServices.Unsafe::Unbox&lt;T&gt;(System.Object)'</Message>
+    </Suppression>
+  </Comparison>
+  <Comparison Left="netcoreapp3.0 baseline" Right="netcoreapp3.0 shimmed">
+    <Suppression DifferenceType="Added">
+      <TypeName>ArApiCompat.ApiCompatibility.Comparing.Rules.CannotChangeGenericConstraintDifference</TypeName>
+      <Message>Cannot add constraint 'new()' on type parameter 'T' of '!!0&amp; System.Runtime.CompilerServices.Unsafe::Unbox&lt;T&gt;(System.Object)'</Message>
+    </Suppression>
+    <Suppression DifferenceType="Added">
+      <TypeName>ArApiCompat.ApiCompatibility.Comparing.Rules.CannotChangeGenericConstraintDifference</TypeName>
+      <Message>Cannot add constraint 'struct' on type parameter 'T' of '!!0&amp; System.Runtime.CompilerServices.Unsafe::Unbox&lt;T&gt;(System.Object)'</Message>
+    </Suppression>
+  </Comparison>
+  <Comparison Left="netcoreapp3.1 baseline" Right="netcoreapp3.1 shimmed">
+    <Suppression DifferenceType="Added">
+      <TypeName>ArApiCompat.ApiCompatibility.Comparing.Rules.CannotChangeGenericConstraintDifference</TypeName>
+      <Message>Cannot add constraint 'new()' on type parameter 'T' of '!!0&amp; System.Runtime.CompilerServices.Unsafe::Unbox&lt;T&gt;(System.Object)'</Message>
+    </Suppression>
+    <Suppression DifferenceType="Added">
+      <TypeName>ArApiCompat.ApiCompatibility.Comparing.Rules.CannotChangeGenericConstraintDifference</TypeName>
+      <Message>Cannot add constraint 'struct' on type parameter 'T' of '!!0&amp; System.Runtime.CompilerServices.Unsafe::Unbox&lt;T&gt;(System.Object)'</Message>
+    </Suppression>
+  </Comparison>
+</ArCompatSuppressions>

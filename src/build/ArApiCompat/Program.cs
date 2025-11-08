@@ -7,11 +7,16 @@ Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.Invaria
 
 if (args is not [{ } suppressionFile, { } comparisonsDef, ..var rest])
 {
-    Console.Error.WriteLine("Usage: ArApiCompat <suppression file> <comparison definition file> [--write-suppressions]");
+    Console.Error.WriteLine("Usage: ArApiCompat <suppression file> <comparison definition file> [--write-suppressions|<message>]");
     return 1;
 }
 
 var writeSuppression = rest is ["--write-suppressions", ..];
+var genSuppressionsMessage = "Regenerate it by passing --write-suppressions to ArApiCompat.";
+if (!writeSuppression && rest is [{ } message, ..])
+{
+    genSuppressionsMessage = message;
+}
 
 var comparisonJobs = new List<ComparisonJob>();
 var comparisonDefsFile = File.ReadAllLines(comparisonsDef);
@@ -111,23 +116,36 @@ if (comparisonJobs.Count == 0)
     return 1;
 }
 
+var anyError = false;
+
+SuppressionFile? suppressionFileModel = null;
+try
+{
+    suppressionFileModel = File.Exists(suppressionFile)
+        ? SuppressionFile.Deserialize(XDocument.Load(suppressionFile))
+        : null;
+}
+catch (Exception e)
+{
+    if (!writeSuppression)
+    {
+        Console.WriteLine($"{suppressionFile}(1): error : Invalid suppression file: {e}");
+        Console.WriteLine($"warning : {genSuppressionsMessage}");
+        anyError = true;
+    }
+}
+
 var result = ComparisonResult.Execute(
-    comparisonJobs,
-    File.Exists(suppressionFile)
-    ? SuppressionFile.Deserialize(XDocument.Load(suppressionFile))
-    : null);
+    comparisonJobs, suppressionFileModel);
 
 if (writeSuppression)
 {
     var suppressions = result.GetSuppressionFile();
     var doc = suppressions.Serialize();
     doc.Save(suppressionFile, SaveOptions.OmitDuplicateNamespaces);
-
-    return 0;
 }
 else
 {
-    var anyError = false;
     for (var i = 0; i < result.JobCount; i++)
     {
         var job = result.Jobs[i];
@@ -152,8 +170,9 @@ else
 
     if (result.HasUnusedSuppressions)
     {
-        Console.WriteLine($"warning : Suppressions file '{suppressionFile}' has unused suppressions. Regenerate it by passing --write-suppressions to ArApiCompat.");
+        Console.WriteLine($"warning : Suppressions file '{suppressionFile}' has unused suppressions. {genSuppressionsMessage}");
     }
-
-    return anyError ? 1 : 0;
 }
+
+
+return anyError ? 1 : 0;

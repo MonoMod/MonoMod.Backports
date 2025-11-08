@@ -15,6 +15,12 @@
                       Private="false" Pack="false"
                       SetTargetFramework="TargetFramework=net9.0"
                       SkipGetTargetFrameworkProperties="true" />
+    <ProjectReference Include="$(MMSourcePath)build\ArApiCompat\ArApiCompat.csproj"
+                      Reference="false" ReferenceOutputAssembly="false"
+                      OutputItemType="MMArApiCompat"
+                      Private="false" Pack="false"
+                      SetTargetFramework="TargetFramework=net9.0"
+                      SkipGetTargetFrameworkProperties="true" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -192,60 +198,76 @@
 
   </Target>
 
-  <Target Name="_ApiCompatSelectRefPath" DependsOnTargets="_FixReferencePathForValidate" Outputs="|%(_GenApiCompatParsed.Identity)|">
-    <PropertyGroup>
-      <_Tfm>%(_GenApiCompatParsed.Tfm)</_Tfm>
-      <_RefPath></_RefPath>
-      <_RefPath Condition="'$(_Tfm)' == '%(_ApiCompatRefPath.Identity)'">%(_ApiCompatRefPath.ReferencePath)</_RefPath>
-    </PropertyGroup>
+  <Target Name="_ApiCompatPrepareComparisonDefs" DependsOnTargets="_FixReferencePathForValidate">
     <ItemGroup>
-      <_GenApiCompatParsed Update="%(_GenApiCompatParsed.Identity)">
-        <LeftRefPath>%(LeftRefPath),$(_RefPath)</LeftRefPath>
-        <RightRefPath>%(RightRefPath),$(_RefPath)</RightRefPath>
-      </_GenApiCompatParsed>
+      <_ArCompareDef Remove="@(_ArCompareDef)" />
     </ItemGroup>
   </Target>
 
-  <Target Name="_ApiCompatFinalizeInputs" DependsOnTargets="_ApiCompatSelectRefPath">
+  <Target Name="_ApiCompatSelectRefPath" DependsOnTargets="_ApiCompatPrepareComparisonDefs" Outputs="|%(_GenApiCompatParsed.Identity)|">
+    <PropertyGroup>
+      <_Tfm>%(_GenApiCompatParsed.Tfm)</_Tfm>
+      <_Dll>%(_GenApiCompatParsed.Dll)</_Dll>
+      <_LeftRefPath>%(_GenApiCompatParsed.LeftRefPath)</_LeftRefPath>
+      <_RightRefPath>%(_GenApiCompatParsed.RightRefPath)</_RightRefPath>
+      <_RefPath></_RefPath>
+      <_RefPath Condition="'$(_Tfm)' == '%(_ApiCompatRefPath.Identity)'">%(_ApiCompatRefPath.ReferencePath)</_RefPath>
+    </PropertyGroup>
+
     <ItemGroup>
-      <ApiCompatLeftAssembliesTransformationPattern Include="^.+apicompat/(.+)(/|\\).+$" ReplacementString="$1 baseline" />
-      <ApiCompatRightAssembliesTransformationPattern Include="^.+apicompat/(.+)(/|\\).+$" ReplacementString="$1 shimmed" />
+      <_LRefPath Remove="@(_LRefPath)" />
+      <_LRefPath Include="$([System.String]::Copy('$(_LeftRefPath)').Split(','))" />
+      <_LRefPath Include="$([System.String]::Copy('$(_RefPath)').Split(','))" />
+
+      <_RRefPath Remove="@(_RRefPath)" />
+      <_RRefPath Include="$([System.String]::Copy('$(_RightRefPath)').Split(','))" />
+      <_RRefPath Include="$([System.String]::Copy('$(_RefPath)').Split(','))" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ArCompareDef Include="$(_Tfm) baseline" />
+      <_ArCompareDef Include="$(_Dll)" />
+      <_ArCompareDef Include="@(_LRefPath->Count())" />
+      <_ArCompareDef Include="@(_LRefPath)"/>
+
+      <_ArCompareDef Include="$(_Tfm) shimmed" />
+      <_ArCompareDef Include="$(_Dll)" />
+      <_ArCompareDef Include="@(_RRefPath->Count())" />
+      <_ArCompareDef Include="@(_RRefPath)"/>
     </ItemGroup>
   </Target>
 
   <PropertyGroup>
-    <_ApiCompatValidateAssembliesSemaphoreFile>$(IntermediateOutputPath)$(MSBuildThisFileName).apicompat.semaphore</_ApiCompatValidateAssembliesSemaphoreFile>
-    <ApiCompatValidateAssembliesDependsOn>CollectApiCompatInputs;$(ApiCompatValidateAssembliesDependsOn);_ApiCompatFinalizeInputs;_WaitForBackportsBuild</ApiCompatValidateAssembliesDependsOn>
+    <ArApiCompatComparisonDefsFile>$(IntermediateOutputPath)comparisons.txt</ArApiCompatComparisonDefsFile>
   </PropertyGroup>
 
   <Target Name="DoApiCompatValidateAssembliesCore"
           AfterTargets="Pack"
-          Inputs="@(_GenApiCompatParsed);
-                  @(ApiCompatSuppressionFile);
-                  $(ApiCompatSuppressionOutputFile)"
-          Outputs="$(_ApiCompatValidateAssembliesSemaphoreFile)"
-          DependsOnTargets="$(ApiCompatValidateAssembliesDependsOn)">
-    <Microsoft.DotNet.ApiCompat.Task.ValidateAssembliesTask
-      RoslynAssembliesPath="$(RoslynAssembliesPath)"
-      LeftAssemblies="@(_GenApiCompatParsed->'%(Dll)')"
-      RightAssemblies="@(_GenApiCompatParsed->'%(Dll)')"
-      GenerateSuppressionFile="$(ApiCompatGenerateSuppressionFile)"
-      PreserveUnnecessarySuppressions="$(ApiCompatPreserveUnnecessarySuppressions)"
-      PermitUnnecessarySuppressions="$(ApiCompatPermitUnnecessarySuppressions)"
-      SuppressionFiles="@(ApiCompatSuppressionFile)"
-      SuppressionOutputFile="$(ApiCompatSuppressionOutputFile)"
-      NoWarn="$(NoWarn)"
-      RespectInternals="$(ApiCompatRespectInternals)"
-      EnableRuleAttributesMustMatch="$(ApiCompatEnableRuleAttributesMustMatch)"
-      ExcludeAttributesFiles="@(ApiCompatExcludeAttributesFile)"
-      EnableRuleCannotChangeParameterName="$(ApiCompatEnableRuleCannotChangeParameterName)"
-      EnableStrictMode="$(ApiCompatStrictMode)"
-      LeftAssembliesReferences="@(_GenApiCompatParsed->'%(LeftRefPath)')"
-      RightAssembliesReferences="@(_GenApiCompatParsed->'%(RightRefPath)')"
-      CreateWorkItemPerAssembly="true"
-      LeftAssembliesTransformationPattern="@(ApiCompatLeftAssembliesTransformationPattern)"
-      RightAssembliesTransformationPattern="@(ApiCompatRightAssembliesTransformationPattern)"
-      SemaphoreFile="$(_ApiCompatValidateAssembliesSemaphoreFile)" />
+          DependsOnTargets="_ApiCompatSelectRefPath;CollectApiCompatInputs">
+
+    <WriteLinesToFile File="$(ArApiCompatComparisonDefsFile)" Lines="@(_ArCompareDef)" Overwrite="true" />
+    
+    <PropertyGroup>
+      <_ArApiCompatExe>%(MMArApiCompat.RelativeDir)%(FileName)$(_NativeExecutableExtension)</_ArApiCompatExe>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_PPArguments Remove="@(_PPArguments)" />
+      <!-- 1: suppression file -->
+      <_PPArguments Include="@(ApiCompatSuppressionFile)" />
+      <!-- 2: comparison defs file -->
+      <_PPArguments Include="$(ArApiCompatComparisonDefsFile)" />
+      <!-- 3: if we want to generate, pass that arg -->
+      <_PPArguments Include="--write-suppressions" Condition="'$(ApiCompatGenerateSuppressionFile)' == 'true'" />
+      <_PPArguments Include="Pass '-p:ApiCompatGenerateSuppressionsFile=true' to regenerate." Condition="'$(ApiCompatGenerateSuppressionFile)' != 'true'" />
+    </ItemGroup>
+
+    <Exec ConsoleToMsBuild="true" LogStandardErrorAsError="true"
+      Command="&quot;$(_ArApiCompatExe)&quot; @(_PPArguments->'&quot;%(Identity)&quot;',' ')">
+      <Output TaskParameter="ExitCode" PropertyName="_ExitCode" />
+    </Exec>
+
+    <Error Text="ArApiCompat failed" Condition="'$(_ExitCode)' != '0'" />
   </Target>
 
 </Project>

@@ -22,11 +22,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <_PropertiesToGet Include="$(PropertyNames)" />
+      <_PropertiesToGet Include="$([System.String]::Copy($(PropertyNames)).Split(','))" />
     </ItemGroup>
 
     <ItemGroup>
-      <Properties Include="%(_PropertiesToGet.Identity)" Value="$(%(Identity))" />
+      <Properties Include="%(_PropertiesToGet.Identity)" Value="$(%(_PropertiesToGet.Identity))" />
     </ItemGroup>
   </Target>
   

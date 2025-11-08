@@ -15,11 +15,12 @@ using System.Diagnostics.CodeAnalysis;
 if (args is not [
     var outputRefDir,
     var snkPath,
+    var tfmsFilePath,
     .. var dotnetOobPackagePaths
     ])
 {
     Console.Error.WriteLine("Assemblies not provided.");
-    Console.Error.WriteLine("Syntax: <output ref dir> <snk directory> <...oob package paths...>");
+    Console.Error.WriteLine("Syntax: <output ref dir> <snk directory> <tfms file> <...oob package paths...>");
     Console.Error.WriteLine("Arguments provided: ");
     foreach (var arg in args)
     {
@@ -61,7 +62,7 @@ var fwReducer = new FrameworkReducer();
 // first, arrange the lookups in a reasonable manner
 // pkgPath -> framework -> dllPaths
 var packageLayout = new Dictionary<string, Dictionary<NuGetFramework, List<(string dllPath, string dllName)>>>();
-var dllsByDllName = new Dictionary<string, Dictionary<NuGetFramework, string>>();
+var dllsByDllName = new Dictionary<string, Dictionary<NuGetFramework, List<string>>>();
 foreach (var (pkgPath, libPath, framework, dllPath) in pkgList
     .SelectMany(ta
         => ta.Item2.SelectMany(tb
@@ -90,14 +91,33 @@ foreach (var (pkgPath, libPath, framework, dllPath) in pkgList
         dllsByDllName.Add(dllName, dllPathList = new());
     }
 
-    dllPathList.Add(framework, dllPath);
+    if (!dllPathList.TryGetValue(framework, out var dllPathSet))
+    {
+        dllPathList.Add(framework, dllPathSet = new());
+    }
+
+    dllPathSet.Add(dllPath);
 }
 
 // collect the list of ALL target frameworks that we might care about
-var targetTfms = fwReducer
+
+var packageTfmsDirect = fwReducer
     .ReduceEquivalent(packageLayout.Values.SelectMany(v => v.Keys))
     .Where(fwk => fwk.Framework is ".NETFramework" or ".NETStandard" or ".NETCoreApp") // filter to just the standard Frameworks, because AsmResolver can't handle all the wacko ones
+    .Where(fwk => fwk is not { Framework: ".NETStandard", Version.Major: < 2 })
     .ToArray();
+
+var backportsTfms = fwReducer.ReduceEquivalent(
+        File.ReadAllLines(tfmsFilePath)
+        .Select(NuGetFramework.ParseFolder)
+    ).ToArray();
+var packageTfmsIndirect = backportsTfms
+    .Where(tfm
+        => packageLayout.Any(kvp => fwReducer.GetNearest(tfm, kvp.Value.Keys) is not null));
+
+var targetTfms = fwReducer.ReduceEquivalent(
+    packageTfmsDirect.Concat(packageTfmsIndirect)
+    ).ToArray();
 
 // then build up a mapping of the source files for all of those TFMs
 var frameworkGroupLayout = new Dictionary<NuGetFramework, List<(string dllName, string assemblyFullName)>>();
@@ -127,7 +147,7 @@ foreach (var tfm in targetTfms)
 var precSorter = new FrameworkPrecedenceSorter(DefaultFrameworkNameProvider.Instance, false);
 
 // now we group by unique sets, and pick only the minimial framework for each (of each type)
-// this is necesasry because our final package will eventually have a dummy reference for the minimum supported
+// this is necessary because our final package will eventually have a dummy reference for the minimum supported
 // for each (particularly net35), but if we just pick the overall minimum (netstandard2.0), net35 would be preferred
 // for all .NET Framework targets, even the ones that support NS2.0.
 var frameworkAssemblies = frameworkGroupLayout
@@ -153,7 +173,7 @@ foreach (var (targetTfm, assemblies) in frameworkAssemblies)
         AssemblyDefinition? backportsShimAssembly = null;
         AssemblyReference? backportsReference = null;
 
-        var bclShimPath = GetFrameworkKey(dllsByDllName[dllName], targetTfm, fwReducer);
+        var bclShimPath = GetFrameworkKey(dllsByDllName[dllName], targetTfm, fwReducer).First();
 
         var bclShim = ModuleDefinition.FromFile(bclShimPath, readerParams);
 
@@ -179,7 +199,7 @@ foreach (var (targetTfm, assemblies) in frameworkAssemblies)
             new AssemblyReference("MonoMod.Backports", new(1, 0, 0, 0))
             .ImportWith(backportsShim.DefaultImporter);
 
-        foreach (var file in dllsByDllName[dllName].Values)
+        foreach (var file in dllsByDllName[dllName].Values.SelectMany(x => x))
         {
             bclShim = ModuleDefinition.FromFile(file, readerParams);
 

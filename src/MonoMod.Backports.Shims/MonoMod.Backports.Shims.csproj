@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.Build.NoTargets">
+<Project Sdk="Microsoft.Build.NoTargets">
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
@@ -26,6 +26,11 @@
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" Shim="true" /> 
     <PackageReference Include="System.ValueTuple" Version="4.6.1" Shim="true" />
     
+    <ExtraShimPackageVersion Include="System.Memory" Version="4.5.5" />
+    <ExtraShimPackageVersion Include="System.Buffers" Version="4.5.1" />
+    <ExtraShimPackageVersion Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />
+    <ExtraShimPackageVersion Include="System.ValueTuple" Version="4.5.0" />
+
     <!-- It seems like we can't sign shims for this, and it's a .NET Standard package, so who cares, really -->
     <!--<PackageReference Include="System.Collections.Concurrent" Version="4.3.0" Shim="true" />-->
   </ItemGroup>
@@ -36,5 +41,4 @@
       <ProjectReference Include="$(MMSourcePath)MonoMod.Backports\MonoMod.Backports.csproj" ReferenceOutputAssembly="true" />
     </ItemGroup>
   </Target>
-
 </Project>

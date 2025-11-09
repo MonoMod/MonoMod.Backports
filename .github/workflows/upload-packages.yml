@@ -3,7 +3,7 @@ name: Upload Packages
 on:
   workflow_call:
     inputs:
-      workflow-id:
+      run-id:
         type: string
         default: ${{ github.run_id }}
         description: The ID of the workflow to upload packages from
@@ -53,7 +53,7 @@ jobs:
         name: packages
         path: artifacts/package/release/
         github-token: ${{ github.token }}
-        run-id: ${{ inputs.workflow-id }}
+        run-id: ${{ inputs.run-id }}
 
     - name: Push packages
       run: dotnet nuget push -s "${{ inputs.nuget-url }}" -k ${{ secrets.nuget-key || github.token }} (Get-Item artifacts/package/release/*.nupkg)

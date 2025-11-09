@@ -57,7 +57,7 @@ jobs:
           while ($true)
           {
             $conclusion = gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" `
-              "/repos/${{ github.repository }}/actions/runs/$(env:RUN_ID)" `
+              "/repos/${{ github.repository }}/actions/runs/$($env:RUN_ID)" `
               | ConvertFrom-Json `
               | % { $_.conclusion }
             if ($null -ne $conclusion)

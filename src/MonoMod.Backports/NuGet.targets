@@ -1,11 +1,5 @@
 <Project>
 
-  <Target Name="Backports_AddShimsDependency">
-    <ItemGroup>
-      <PackageReference Include="MonoMod.Backports.Shims" Version="$(Version)" />
-    </ItemGroup>
-  </Target>
-
   <ItemGroup>
     <PackageFile Include="MonoMod.Backports.Shims" Version="$(Version)">
       <Source>Explicit</Source>

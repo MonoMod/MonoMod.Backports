@@ -13,14 +13,15 @@ using ShimGen;
 using System.Diagnostics.CodeAnalysis;
 
 if (args is not [
+    var backportsVersion,
+    var backportsSnkFile,
     var outputRefDir,
     var snkPath,
     var tfmsFilePath,
     .. var dotnetOobPackagePaths
     ])
 {
-    Console.Error.WriteLine("Assemblies not provided.");
-    Console.Error.WriteLine("Syntax: <output ref dir> <snk directory> <tfms file> <...oob package paths...>");
+    Console.Error.WriteLine("Syntax: <backports version> <backports snk file> <output ref dir> <snk directory> <tfms file> <...oob package paths...>");
     Console.Error.WriteLine("Arguments provided: ");
     foreach (var arg in args)
     {
@@ -160,6 +161,12 @@ var frameworkAssemblies = frameworkGroupLayout
     .OrderBy(t => t.fwk, precSorter)
     .ToArray();
 
+var backportsReferenceBase = new AssemblyReference(
+    "MonoMod.Backports",
+    new Version(backportsVersion),
+    publicKey: true,
+    StrongNamePrivateKey.FromFile(backportsSnkFile).CreatePublicKeyBlob(AssemblyHashAlgorithm.Sha1));
+
 // Now, we have some work to do for shims. We want to check if there is an equivalent type to the shims
 // defined or exported from Backports, and rewrite a new shim forwarding to Backports as appropriate.
 var importedSet = new Dictionary<string, ExportedType>();
@@ -195,9 +202,7 @@ foreach (var (targetTfm, assemblies) in frameworkAssemblies)
             HasPublicKey = bclShim.Assembly!.HasPublicKey,
         };
 
-        backportsReference =
-            new AssemblyReference("MonoMod.Backports", new(1, 0, 0, 0))
-            .ImportWith(backportsShim.DefaultImporter);
+        backportsReference = backportsReferenceBase.ImportWith(backportsShim.DefaultImporter);
 
         foreach (var file in dllsByDllName[dllName].Values.SelectMany(x => x))
         {

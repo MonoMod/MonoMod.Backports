@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <!-- target frameworks are defined in Common.props -->
@@ -6,11 +6,15 @@
     <!-- We're not going to be having any of the logic that would use the shared sources, so we'll just not include them -->
     <RootNamespace><![CDATA[ ]]></RootNamespace>
     <NoWarn>$(NoWarn);CA1200;CA1716</NoWarn>
-    <MMReferenceSourcePkgs>false</MMReferenceSourcePkgs>
   </PropertyGroup>
 
   <PropertyGroup>
     <Description>A set of backports of new BCL features to all frameworks which MonoMod supports.</Description>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>$(MMRootPath)MonoMod.Backports.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>true</SignAssembly>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -24,9 +28,7 @@
     <PackageReference Include="js6pak.InlineIL.Fody" Version="1.10.0-js6pak.1" PrivateAssets="all" ExcludeAssets="runtime" Pack="false" />
   </ItemGroup>
 
-  <Target Name="RemoveImplicitOutOfBandAssemblies"
-          BeforeTargets="BeforeCompile"
-          AfterTargets="FindReferenceAssembliesForReferences">
+  <Target Name="RemoveImplicitOutOfBandAssemblies" BeforeTargets="BeforeCompile" AfterTargets="FindReferenceAssembliesForReferences">
     <ItemGroup>
       <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(Filename) == 'System.Runtime.CompilerServices.Unsafe'" />
     </ItemGroup>

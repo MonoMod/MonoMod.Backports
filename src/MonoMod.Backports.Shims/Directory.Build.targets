@@ -125,8 +125,7 @@
           DependsOnTargets="$(CoreCompileDependsOn);_PrepareRawTfmList;_GetShimmedPackages;ResolveProjectReferences"
           Inputs="$(MSBuildAllProjects);@(MMShimGen)"
           Outputs="$(_OutputTfmsTxt)"
-          Condition="'$(dotnet-nugetize)' == ''"
-          >
+          Condition="'$(dotnet-nugetize)' == ''">
 
     <ItemGroup>
       <_ExistingShimFiles Include="$(_ShimsDir)**/*" />
@@ -140,16 +139,37 @@
       <_ShimGenExe>%(MMShimGen.RelativeDir)%(FileName)$(_NativeExecutableExtension)</_ShimGenExe>
       <_SnkDir>$(MMRootPath)snk/</_SnkDir>
     </PropertyGroup>
+    
+    <ItemGroup>
+      <_BackportsProps Remove="@(_BackportsProps)"/>
+    </ItemGroup>
+
+    <MSBuild Projects="$(MMSourcePath)MonoMod.Backports/MonoMod.Backports.csproj"
+             Targets="GetAssemblyVersion;GetProperties"
+             Properties="TargetFramework=net8.0;PropertyNames=AssemblyVersion,AssemblyOriginatorKeyFile;BuildProjectReferences=false">
+      <Output ItemName="_BackportsProps" TaskParameter="TargetOutputs" />
+    </MSBuild>
+
+    <PropertyGroup>
+      <_BackportsAsmVersion></_BackportsAsmVersion>
+      <_BackportsKeyFile></_BackportsKeyFile>
+      <_BackportsAsmVersion Condition="'%(_BackportsProps.Identity)' == 'AssemblyVersion'">%(_BackportsProps.Value)</_BackportsAsmVersion>
+      <_BackportsKeyFile Condition="'%(_BackportsProps.Identity)' == 'AssemblyOriginatorKeyFile'">%(_BackportsProps.Value)</_BackportsKeyFile>
+    </PropertyGroup>
 
     <ItemGroup>
       <_PPArguments Remove="@(_PPArguments)" />
-      <!-- 1: the output directory -->
+      <!-- 1: Backports version -->
+      <_PPArguments Include="$(_BackportsAsmVersion)" />
+      <!-- 2: Backports keyfile -->
+      <_PPArguments Include="$(_BackportsKeyFile)" />
+      <!-- 3: the output directory -->
       <_PPArguments Include="$(_ShimsDir)" />
-      <!-- 2: snk directory -->
+      <!-- 4: snk directory -->
       <_PPArguments Include="$(_SnkDir)" />
-      <!-- 3: tfms file -->
+      <!-- 5: tfms file -->
       <_PPArguments Include="$(_BackportsTfmsTxt)" />
-      <!-- 4: the paths to the packages to process -->
+      <!-- 6: the paths to the packages to process -->
       <_PPArguments Include="@(_ShimmedPackagePaths)" />
     </ItemGroup>
 

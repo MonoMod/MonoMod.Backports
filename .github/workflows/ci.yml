@@ -21,7 +21,8 @@ jobs:
     name: Setup
     runs-on: ubuntu-latest
     outputs:
-      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+      should_skip: ${{ steps.skip_check.outputs.should_skip == 'true' || steps.msg_check.outputs.skip == 'true' }}
+      upload_pkgs: ${{ steps.msg_check.outputs.skip != 'true' }}
       skipped_by: ${{ steps.skip_check.outputs.skipped_by }}
       ver: ${{ steps.computever.outputs.ver }}
       checkid: ${{ steps.result_check.outpus.check_id }}
@@ -32,7 +33,11 @@ jobs:
       with:
         cancel_others: true
         concurrent_skipping: same_content_newer
-        
+
+    - name: Check if this run is skipped by commit message
+      id: msg_check
+      run: echo "skip=${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[skip-ci]') }}" >> $env:GITHUB_OUTPUT
+      
     - name: Compute Version
       id: computever
       run: echo "ver=$(Get-Date -Format y.M.d).${{ github.run_number }}.${{ github.run_attempt }}" >> $env:GITHUB_OUTPUT
@@ -47,8 +52,8 @@ jobs:
 
   upload:
     needs: [setup, build]
-    if: github.ref_name == 'master'
+    if: ${{ needs.setup.upload_pkgs == 'true' && github.ref_name == 'master' && (success() || needs.setup.result == 'success') }}
     name: Upload Packages
     uses: ./.github/workflows/upload-packages.yml
     with:
-      workflow-id: ${{ needs.setup.outputs.should_skip == 'true' && fromJSON(needs.setup.outputs.skipped_by).workflowId || github.run_id }}
+      run-id: ${{ needs.setup.outputs.should_skip == 'true' && fromJSON(needs.setup.outputs.skipped_by).id || github.run_id }}

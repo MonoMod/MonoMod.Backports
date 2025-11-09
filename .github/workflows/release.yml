@@ -86,17 +86,28 @@ jobs:
 
   bump-ver:
     name: Bump versions
-    needs: [setup, build]
+    needs: [setup, upload-github, upload-nuget]
+    if: ${{ !failure() && !cancelled() }}
     runs-on: ubuntu-latest
 
     permissions:
       contents: write
 
     steps:
+    - name: Authenticate as app
+      uses: actions/create-github-app-token@v2
+      id: app_tok
+      with:
+        app-id: ${{ vars.APP_ID }}
+        private-key: ${{ secrets.APP_PRIVKEY }}
+
     - name: Checkout
       uses: actions/checkout@v4
+      with:
+        token: ${{ steps.app_tok.outputs.token }} # checkout using the app token so we can push directly to the repo head
+        lfs: true
+        submodules: true
       
-    # first, make release/tag
     - name: Download compiled packages
       uses: actions/download-artifact@v4
       with:
@@ -104,6 +115,8 @@ jobs:
         path: artifacts/package/release/
         github-token: ${{ github.token }}
         run-id: ${{ github.run_id }}
+        
+    # first, make release/tag
     - name: Create release
       uses: softprops/action-gh-release@v2
       if: '!inputs.dryrun'
@@ -142,9 +155,11 @@ jobs:
       if: '!inputs.prerelease'
       uses: EndBug/add-and-commit@v9
       with:
-        add: Version.props
-        message: "[BOT]: Bump version after ${{ needs.setup.outputs.ver }}"
-        committer_name: GitHub Actions
-        committer_email: 41898282+github-actions[bot]@users.noreply.github.com
-        push: ${{ !inputs.dryrun }}
+        message: |
+          [BOT]: Bump version after ${{ needs.setup.outputs.ver }} release
+
+          [skip-ci]
+        default_author: github_actions
+        push: ${{ !inputs.dryrun && 'origin --force --set-upstream' || 'false' }}
         pathspec_error_handling: exitAtEnd
+

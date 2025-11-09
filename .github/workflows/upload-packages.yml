@@ -3,7 +3,7 @@ name: Upload Packages
 on:
   workflow_call:
     inputs:
-      workflow-id:
+      run-id:
         type: string
         default: ${{ github.run_id }}
         description: The ID of the workflow to upload packages from
@@ -47,13 +47,42 @@ jobs:
       with:
         global-json: global.json
 
+    - name: Wait for packages to be available
+      if: github.run_id != inputs.run-id
+      shell: pwsh
+      env:
+        GH_TOKEN: ${{ github.token }}
+        RUN_ID: ${{ inputs.run-id }}
+      run: |
+          while ($true)
+          {
+            $conclusion = gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" `
+              "/repos/${{ github.repository }}/actions/runs/$($env:RUN_ID)" `
+              | ConvertFrom-Json `
+              | % { $_.conclusion }
+            if ($null -ne $conclusion)
+            {
+              if ($conclusion -ne "success")
+              {
+                echo "Build had conclusion '$conclusion'. Failing.";
+                exit 1;
+              }
+              else
+              {
+                echo "Build succeeded. Continuing."
+                exit 0;
+              }
+            }
+            Start-Sleep -Seconds 30;
+          }
+
     - name: Download compiled packages
       uses: actions/download-artifact@v4
       with:
         name: packages
         path: artifacts/package/release/
         github-token: ${{ github.token }}
-        run-id: ${{ inputs.workflow-id }}
+        run-id: ${{ inputs.run-id }}
 
     - name: Push packages
       run: dotnet nuget push -s "${{ inputs.nuget-url }}" -k ${{ secrets.nuget-key || github.token }} (Get-Item artifacts/package/release/*.nupkg)

@@ -224,6 +224,9 @@ namespace System
         [DoesNotReturn, StackTraceHidden]
         internal static void ThrowArgumentException_TupleIncorrectType(object other) => throw new ArgumentException($"Value tuple of incorrect type (found {other.GetType()})", nameof(other));
 
+        [DoesNotReturn, StackTraceHidden]
+        internal static void ThrowArgumentException_TypeContainsReferences(Type targetType) => throw new ArgumentException($"The type '{targetType}' is not supported because it contains references.");
+        
         //
         // ReadOnlySequence Slice validation Throws coalesced to enable inlining of the Slice
         //

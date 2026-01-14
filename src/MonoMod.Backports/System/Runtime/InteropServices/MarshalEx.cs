@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using InlineIL;
+using System.Runtime.CompilerServices;
 
 #if !NET6_0_OR_GREATER
 using System.Reflection;
@@ -39,6 +40,14 @@ namespace System.Runtime.InteropServices
                     throw new PlatformNotSupportedException("Cannot set last P/Invoke error (no method Marshal.SetLastWin32Error or Marshal.SetLastPInvokeError)");
                 del(error);
 #endif
+            }
+
+            public static void InitHandle(SafeHandle safeHandle, nint handle)
+            {
+                // this method always exists and is protected, we just need to call it
+                IL.Push(safeHandle);
+                IL.Push(handle);
+                IL.Emit.Call(MethodRef.Method(typeof(SafeHandle), "SetHandle", typeof(nint)));
             }
         }
     }

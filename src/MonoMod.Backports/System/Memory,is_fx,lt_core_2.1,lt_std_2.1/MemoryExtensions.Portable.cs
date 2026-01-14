@@ -278,7 +278,7 @@ namespace System
             if (text == null)
                 return default;
 
-            return new ReadOnlySpan<char>(text, (nint)RuntimeHelpersEx.OffsetToStringData, text.Length);
+            return new ReadOnlySpan<char>(text, (nint)RuntimeHelpers.OffsetToStringData, text.Length);
         }
 
         /// <summary>
@@ -302,7 +302,7 @@ namespace System
             if ((uint)start > (uint)text.Length)
                 ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.start);
 
-            return new ReadOnlySpan<char>(text, (nint)RuntimeHelpersEx.OffsetToStringData + start * sizeof(char), text.Length - start);
+            return new ReadOnlySpan<char>(text, (nint)RuntimeHelpers.OffsetToStringData + start * sizeof(char), text.Length - start);
         }
 
         /// <summary>
@@ -327,7 +327,7 @@ namespace System
             if ((uint)start > (uint)text.Length || (uint)length > (uint)(text.Length - start))
                 ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.start);
 
-            return new ReadOnlySpan<char>(text, (nint)RuntimeHelpersEx.OffsetToStringData + start * sizeof(char), length);
+            return new ReadOnlySpan<char>(text, (nint)RuntimeHelpers.OffsetToStringData + start * sizeof(char), length);
         }
 
         /// <summary>Creates a new <see cref="ReadOnlyMemory{T}"/> over the portion of the target string.</summary>

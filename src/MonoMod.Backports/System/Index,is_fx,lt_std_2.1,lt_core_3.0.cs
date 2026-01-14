@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
@@ -12,6 +11,8 @@ namespace System
     /// int lastElement = someArray[^1]; // lastElement = 5
     /// </code>
     /// </remarks>
+    [SuppressMessage("Globalization", "CA1305:Specify IFormatProvider",
+        Justification = "Implementation taken straight from BCL")]
     public readonly struct Index : IEquatable<Index>
     {
         private readonly int _value;
@@ -145,7 +146,6 @@ namespace System
 #if (!NETSTANDARD2_0 && !NETFRAMEWORK)
             Span<char> span = stackalloc char[11]; // 1 for ^ and 10 for longest possible uint value
             bool formatted = ((uint)Value).TryFormat(span.Slice(1), out int charsWritten);
-            Debug.Assert(formatted);
             span[0] = '^';
             return new string(span.Slice(0, charsWritten + 1));
 #else

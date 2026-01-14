@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
@@ -13,6 +12,8 @@ namespace System
     /// int[] subArray2 = someArray[1..^0]; // { 2, 3, 4, 5 }
     /// </code>
     /// </remarks>
+    [SuppressMessage("Globalization", "CA1305:Specify IFormatProvider",
+        Justification = "Implementation taken straight from BCL")]
     public readonly struct Range : IEquatable<Range>
     {
         /// <summary>Represent the inclusive start index of the Range.</summary>
@@ -60,7 +61,6 @@ namespace System
                 pos = 1;
             }
             bool formatted = ((uint)Start.Value).TryFormat(span.Slice(pos), out int charsWritten);
-            Debug.Assert(formatted);
             pos += charsWritten;
  
             span[pos++] = '.';
@@ -71,7 +71,6 @@ namespace System
                 span[pos++] = '^';
             }
             formatted = ((uint)End.Value).TryFormat(span.Slice(pos), out charsWritten);
-            Debug.Assert(formatted);
             pos += charsWritten;
  
             return new string(span.Slice(0, pos));

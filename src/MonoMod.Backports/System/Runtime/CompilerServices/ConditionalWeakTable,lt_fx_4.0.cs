@@ -514,7 +514,7 @@ namespace System.Runtime.CompilerServices
                 VerifyIntegrity();
                 _invalid = true;
 
-                int hashCode = RuntimeHelpersEx.GetHashCode(key) & int.MaxValue;
+                int hashCode = RuntimeHelpers.GetHashCode(key) & int.MaxValue;
                 int newEntry = _firstFreeEntry++;
 
                 _entries[newEntry].HashCode = hashCode;
@@ -548,7 +548,7 @@ namespace System.Runtime.CompilerServices
             {
                 Debug.Assert(key != null); // Key already validated as non-null.
 
-                int hashCode = RuntimeHelpersEx.GetHashCode(key) & int.MaxValue;
+                int hashCode = RuntimeHelpers.GetHashCode(key) & int.MaxValue;
                 int bucket = hashCode & (_buckets.Length - 1);
                 for (int entriesIndex = Volatile.Read(ref _buckets[bucket]); entriesIndex != -1; entriesIndex = _entries[entriesIndex].Next)
                 {

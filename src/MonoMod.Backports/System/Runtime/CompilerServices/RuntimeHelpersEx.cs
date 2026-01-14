@@ -9,7 +9,9 @@
 #endif
 
 using System.Diagnostics.CodeAnalysis;
+#if !HAS_ISREFORCONTAINSREF
 using System.Reflection;
+#endif
 using System.Runtime.Serialization;
 
 namespace System.Runtime.CompilerServices
@@ -90,6 +92,7 @@ namespace System.Runtime.CompilerServices
 
             public static T[] GetSubArray<T>(T[] array, Range range)
             {
+                ThrowHelper.ThrowIfArgumentNull(array, ExceptionArgument.array);
                 var (offset, length) = range.GetOffsetAndLength(array.Length);
                 T[] dest;
                 if (typeof(T[]) == array.GetType())

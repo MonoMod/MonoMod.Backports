@@ -288,5 +288,6 @@ namespace System
         millisecondsDelay,
         list,
         dictionary,
+        action,
     }
 }

@@ -199,7 +199,7 @@ namespace System
             if (typeof(T) == typeof(char))
             {
                 // If this wraps a string and represents the full length of the string, just return the wrapped string.
-                if (_byteOffset == (nint)RuntimeHelpers.OffsetToStringData)
+                if (_byteOffset == (nint)RuntimeHelpersEx.OffsetToStringData)
                 {
                     object? obj = Unsafe.As<object?>(_pinnable); // minimize chances the compilers will optimize away the 'is' check
                     if (obj is string str && _length == str.Length)

@@ -87,6 +87,24 @@ namespace System.Runtime.CompilerServices
                 return true;
 #endif
             }
+
+            public static T[] GetSubArray<T>(T[] array, Range range)
+            {
+                var (offset, length) = range.GetOffsetAndLength(array.Length);
+                T[] dest;
+                if (typeof(T[]) == array.GetType())
+                {
+                    dest = new T[length];
+                }
+                else
+                {
+                    dest = Unsafe.As<T[]>(Array.CreateInstance(array.GetType().GetElementType()!, length));
+                }
+                
+                Array.Copy(array, offset, dest, 0, length);
+
+                return dest;
+            }
         }
     }
 }

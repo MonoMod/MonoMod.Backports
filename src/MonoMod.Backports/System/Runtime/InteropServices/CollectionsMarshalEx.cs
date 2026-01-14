@@ -6,7 +6,10 @@
 #endif
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+#if !HAS_SETCOUNT
 using System.Reflection;
+#endif
 
 namespace System.Runtime.InteropServices
 {
@@ -21,6 +24,8 @@ namespace System.Runtime.InteropServices
             public static FieldInfo CountField;
             public static FieldInfo? VersionField;
 
+            [SuppressMessage("Performance", "CA1810:Initialize reference type static fields inline"
+                , Justification = "This advice is not very important here")]
             static ListFieldHolder()
             {
                 var t = typeof(List<T>);
@@ -38,6 +43,8 @@ namespace System.Runtime.InteropServices
 
         extension(CollectionsMarshal)
         {
+            [SuppressMessage("Design", "CA1002:Do not expose generic lists",
+                Justification = "This is replicating an existing API")]
             public static void SetCount<T>(List<T> list, int count)
             {
 #if HAS_SETCOUNT

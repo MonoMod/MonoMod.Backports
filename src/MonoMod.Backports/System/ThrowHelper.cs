@@ -283,5 +283,7 @@ namespace System
         threadLocal,
         delay,
         millisecondsDelay,
+        list,
+        dictionary,
     }
 }

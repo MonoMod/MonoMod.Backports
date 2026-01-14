@@ -44,10 +44,20 @@ namespace System.Runtime.InteropServices
 
             public static void InitHandle(SafeHandle safeHandle, nint handle)
             {
-                // this method always exists and is protected, we just need to call it
+                SafeHandleHelper.SetHandle(safeHandle, handle);
+            }
+        }
+
+        private abstract class SafeHandleHelper : SafeHandle
+        {
+            private SafeHandleHelper() : base(default, default) => throw new NotSupportedException();
+
+            public static void SetHandle(SafeHandle safeHandle, nint handle)
+            {
+                // this method always exists and is accessible here, roslyn just wont let us call it since it is protected
                 IL.Push(safeHandle);
                 IL.Push(handle);
-                IL.Emit.Call(MethodRef.Method(typeof(SafeHandle), "SetHandle", typeof(nint)));
+                IL.Emit.Callvirt(MethodRef.Method(typeof(SafeHandle), "SetHandle", typeof(nint)));
             }
         }
     }

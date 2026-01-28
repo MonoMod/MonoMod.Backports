@@ -108,8 +108,11 @@ namespace System
                 }
             }
 
-            // Resurrect ourselves by re-registering for finalization.
-            GC.ReRegisterForFinalize(this);
+            if (!Environment.HasShutdownStarted)
+            {
+                // Resurrect ourselves by re-registering for finalization.
+                GC.ReRegisterForFinalize(this);
+            }
         }
 #pragma warning restore CA1031 // Do not catch general exception types
     }

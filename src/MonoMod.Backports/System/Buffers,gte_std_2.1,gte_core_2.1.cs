@@ -24,3 +24,6 @@ using System.Runtime.CompilerServices;
 [assembly: TypeForwardedTo(typeof(Utf8Parser))]
 
 [assembly: TypeForwardedTo(typeof(ArrayPool<>))]
+
+[assembly: TypeForwardedTo(typeof(SpanAction<,>))]
+[assembly: TypeForwardedTo(typeof(ReadOnlySpanAction<,>))]

@@ -19,7 +19,7 @@
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AnalysisMode>All</AnalysisMode>
-    <AnalysisLevel>8.0</AnalysisLevel>
+    <AnalysisLevel>10.0</AnalysisLevel>
     
     <NoWarn>$(NoWarn);CS1591</NoWarn> <!-- XML documentation warning. TODO: We should probably remove this at some point and ensure that MM is fully documented. -->
     <NoWarn>$(NoWarn);CA1716</NoWarn> <!-- Members have name shared with primitive type. -->
@@ -27,8 +27,8 @@
     <NoWarn>$(NoWarn);CA2020</NoWarn> <!-- Starting with .NET 7, conversions with IntPtr don't throw in an unchecked context -->
     <NoWarn>$(NoWarn);CA1303</NoWarn> <!-- Use resource tables for strings passed to Console.WriteLine -->
 
-    <RoslynVersion>4.14.0</RoslynVersion>
-    <MSBuildRequiredVersion>17.12.6</MSBuildRequiredVersion>
+    <RoslynVersion>5.3.0-2.final</RoslynVersion>
+    <MSBuildRequiredVersion>18.0.2</MSBuildRequiredVersion>
   </PropertyGroup>
 
   <ItemGroup>

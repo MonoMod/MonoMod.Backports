@@ -2,15 +2,15 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net9.0</TargetFrameworks>
+    <TargetFrameworks>net10.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AsmResolver.DotNet" Version="6.0.0-development.32" />
-    <PackageReference Include="NuGet.Frameworks" Version="6.12.1" />
+    <PackageReference Include="AsmResolver.DotNet" Version="6.0.0-development.358" />
+    <PackageReference Include="NuGet.Frameworks" Version="7.3.0" />
   </ItemGroup>
 
 </Project>

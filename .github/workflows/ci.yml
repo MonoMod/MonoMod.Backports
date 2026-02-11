@@ -2,7 +2,7 @@ name: CI
 on:
   push:
   pull_request:
-  
+
 defaults:
   run:
     shell: pwsh
@@ -13,7 +13,7 @@ env:
   NUGET_PACKAGES: ${{github.workspace}}/artifacts/pkg
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref || github.run_id }} 
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:
@@ -27,20 +27,20 @@ jobs:
       ver: ${{ steps.computever.outputs.ver }}
       checkid: ${{ steps.result_check.outpus.check_id }}
     steps:
-    - name: Check if this run should be skipped
-      id: skip_check
-      uses: fkirc/skip-duplicate-actions@v5
-      with:
-        cancel_others: true
-        concurrent_skipping: same_content_newer
+      - name: Check if this run should be skipped
+        id: skip_check
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          cancel_others: true
+          concurrent_skipping: same_content_newer
 
-    - name: Check if this run is skipped by commit message
-      id: msg_check
-      run: echo "skip=${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[skip-ci]') }}" >> $env:GITHUB_OUTPUT
-      
-    - name: Compute Version
-      id: computever
-      run: echo "ver=$(Get-Date -Format y.M.d).${{ github.run_number }}.${{ github.run_attempt }}" >> $env:GITHUB_OUTPUT
+      - name: Check if this run is skipped by commit message
+        id: msg_check
+        run: echo "skip=${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[skip-ci]') }}" >> $env:GITHUB_OUTPUT
+
+      - name: Compute Version
+        id: computever
+        run: echo "ver=$(Get-Date -Format y.M.d).${{ github.run_number }}.${{ github.run_attempt }}" >> $env:GITHUB_OUTPUT
 
   build:
     needs: [setup]

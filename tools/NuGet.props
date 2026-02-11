@@ -4,7 +4,6 @@
   <PropertyGroup>
     <PackageId>$(MSBuildProjectName)</PackageId>
     <Authors>0x0ade, DaNike</Authors> <!-- Note: With dotnet pack, <Authors> is also the list of owners. -->
-    <!--<PackageValidationBaselineVersion>2.0.0</PackageValidationBaselineVersion>-->
     <VersionSuffix Condition="'$(VersionSuffix)' == '' and '$(DoNotAddSuffix)' == ''">alpha.dev</VersionSuffix>
     
     <Copyright>Copyright $([System.DateTime]::Now.ToString(yyyy)) $(Authors)</Copyright>
@@ -34,12 +33,12 @@
   
   <ItemGroup>
     <!-- SourceLink -->
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.102">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
     <!-- NuGetizer for better control over NuGet package generation with dotnet pack -->
-    <PackageReference Include="NuGetizer" Version="1.2.4">
+    <PackageReference Include="NuGetizer" Version="1.4.7">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>

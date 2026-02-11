@@ -14,9 +14,9 @@ on:
         required: true
         default: Patch
         options:
-        - Patch
-        - Minor
-        - Major
+          - Patch
+          - Minor
+          - Major
       prerelease:
         description: This is a prerelease
         type: boolean
@@ -25,7 +25,7 @@ on:
         description: Prerelease suffix
         type: string
         default: ""
-       
+
 defaults:
   run:
     shell: pwsh
@@ -36,7 +36,7 @@ env:
   NUGET_PACKAGES: ${{github.workspace}}/artifacts/pkg
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref || github.run_id }} 
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:
@@ -46,20 +46,20 @@ jobs:
     outputs:
       ver: ${{ steps.computever.outputs.ver }}
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      
-    - name: Get Version
-      id: computever
-      run: |
-        $ver = ([xml](Get-Content Version.props)).Project.PropertyGroup.VersionPrefix;
-        $suffix = "${{ inputs.prerelease && format('-{0}', inputs.prerelease-str) || '' }}"
-        echo "ver=$($ver)$($suffix)" >> $env:GITHUB_OUTPUT
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Get Version
+        id: computever
+        run: |
+          $ver = ([xml](Get-Content Version.props)).Project.PropertyGroup.VersionPrefix;
+          $suffix = "${{ inputs.prerelease && format('-{0}', inputs.prerelease-str) || '' }}"
+          echo "ver=$($ver)$($suffix)" >> $env:GITHUB_OUTPUT
 
   build:
     needs: [setup]
     if: needs.setup.outputs.should_skip != 'true'
-    name: 'Build ${{ needs.setup.outputs.ver }}'
+    name: "Build ${{ needs.setup.outputs.ver }}"
     uses: ./.github/workflows/build.yml
     with:
       version: ${{ inputs.prerelease-str }}
@@ -67,7 +67,7 @@ jobs:
 
   upload-github:
     needs: [setup, build]
-    if: '!inputs.dryrun'
+    if: "!inputs.dryrun"
     name: Upload Packages (GitHub)
     uses: ./.github/workflows/upload-packages.yml
     with:
@@ -75,7 +75,7 @@ jobs:
 
   upload-nuget:
     needs: [setup, build]
-    if: '!inputs.dryrun'
+    if: "!inputs.dryrun"
     name: Upload Packages (NuGet)
     uses: ./.github/workflows/upload-packages.yml
     with:
@@ -94,73 +94,72 @@ jobs:
       contents: write
 
     steps:
-    - name: Authenticate as app
-      uses: actions/create-github-app-token@v2
-      id: app_tok
-      with:
-        app-id: ${{ vars.APP_ID }}
-        private-key: ${{ secrets.APP_PRIVKEY }}
+      - name: Authenticate as app
+        uses: actions/create-github-app-token@v2
+        id: app_tok
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVKEY }}
 
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        token: ${{ steps.app_tok.outputs.token }} # checkout using the app token so we can push directly to the repo head
-        lfs: true
-        submodules: true
-      
-    - name: Download compiled packages
-      uses: actions/download-artifact@v4
-      with:
-        name: packages
-        path: artifacts/package/release/
-        github-token: ${{ github.token }}
-        run-id: ${{ github.run_id }}
-        
-    # first, make release/tag
-    - name: Create release
-      uses: softprops/action-gh-release@v2
-      if: '!inputs.dryrun'
-      with:
-        token: ${{ steps.app_tok.outputs.token }}
-        files: artifacts/package/release/*.nupkg
-        tag_name: v${{ needs.setup.outputs.ver }}
-        prerelease: ${{ inputs.prerelease }}
-        generate_release_notes: true
-        
-    # NOTE: manual package caching
-    - name: Cache restored NuGet packages
-      if: '!inputs.prerelease'
-      uses: actions/cache@v4
-      with:
-        path: ${{ env.NUGET_PACKAGES }}
-        key: ${{ runner.os }}-nuget-v1-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}
-        restore-keys: ${{ runner.os }}-nuget-v1-
-    
-    - name: Install .NET SDK
-      if: '!inputs.prerelease'
-      uses: nike4613/install-dotnet@533307d1c90c37993c8ef1397388bc9783e7b87c
-      with:
-        global-json: global.json
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          token: ${{ steps.app_tok.outputs.token }} # checkout using the app token so we can push directly to the repo head
+          lfs: true
+          submodules: true
 
-    # then, bump the version (if appropriate)
-    - name: Update version
-      if: '!inputs.prerelease'
-      run: ./tools/bump_version.ps1 -BumpVersion ${{ inputs.bumpkind }}
-    
-    - name: Update compat suppressions
-      if: '!inputs.prerelease'
-      run: |
-        dotnet pack -c Release -clp:NoSummary -noAutoRsp -p:RunAnalyzers=false -p:ApiCompatGenerateSuppressionFile=true
+      - name: Download compiled packages
+        uses: actions/download-artifact@v7
+        with:
+          name: packages
+          path: artifacts/package/release/
+          github-token: ${{ github.token }}
+          run-id: ${{ github.run_id }}
 
-    - name: Commit updated version
-      if: '!inputs.prerelease'
-      uses: EndBug/add-and-commit@v9
-      with:
-        message: |
-          [BOT]: Bump version after ${{ needs.setup.outputs.ver }} release
+      # first, make release/tag
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        if: "!inputs.dryrun"
+        with:
+          token: ${{ steps.app_tok.outputs.token }}
+          files: artifacts/package/release/*.nupkg
+          tag_name: v${{ needs.setup.outputs.ver }}
+          prerelease: ${{ inputs.prerelease }}
+          generate_release_notes: true
 
-          [skip-ci]
-        default_author: github_actions
-        push: ${{ !inputs.dryrun && 'origin --force --set-upstream' || 'false' }}
-        pathspec_error_handling: exitAtEnd
+      # NOTE: manual package caching
+      - name: Cache restored NuGet packages
+        if: "!inputs.prerelease"
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: ${{ runner.os }}-nuget-v1-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}
+          restore-keys: ${{ runner.os }}-nuget-v1-
 
+      - name: Install .NET SDK
+        if: "!inputs.prerelease"
+        uses: nike4613/install-dotnet@cc706db77ed67745a4a4cbae19b2869220e34d27
+        with:
+          global-json: global.json
+
+      # then, bump the version (if appropriate)
+      - name: Update version
+        if: "!inputs.prerelease"
+        run: ./tools/bump_version.ps1 -BumpVersion ${{ inputs.bumpkind }}
+
+      - name: Update compat suppressions
+        if: "!inputs.prerelease"
+        run: |
+          dotnet pack -c Release -clp:NoSummary -noAutoRsp -p:RunAnalyzers=false -p:ApiCompatGenerateSuppressionFile=true
+
+      - name: Commit updated version
+        if: "!inputs.prerelease"
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: |
+            [BOT]: Bump version after ${{ needs.setup.outputs.ver }} release
+
+            [skip-ci]
+          default_author: github_actions
+          push: ${{ !inputs.dryrun && 'origin --force --set-upstream' || 'false' }}
+          pathspec_error_handling: exitAtEnd

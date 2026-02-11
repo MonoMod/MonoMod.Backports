@@ -7,19 +7,19 @@
                       Reference="false" ReferenceOutputAssembly="false"
                       OutputItemType="MMGenApiCompat"
                       Private="false" Pack="false"
-                      SetTargetFramework="TargetFramework=net9.0"
+                      SetTargetFramework="TargetFramework=net10.0"
                       SkipGetTargetFrameworkProperties="true" />
     <ProjectReference Include="$(MMSourcePath)build\FilterPackagesForRestore\FilterPackagesForRestore.csproj"
                       Reference="false" ReferenceOutputAssembly="false"
                       OutputItemType="MMFilterPkgs"
                       Private="false" Pack="false"
-                      SetTargetFramework="TargetFramework=net9.0"
+                      SetTargetFramework="TargetFramework=net10.0"
                       SkipGetTargetFrameworkProperties="true" />
     <ProjectReference Include="$(MMSourcePath)build\ArApiCompat\ArApiCompat.csproj"
                       Reference="false" ReferenceOutputAssembly="false"
                       OutputItemType="MMArApiCompat"
                       Private="false" Pack="false"
-                      SetTargetFramework="TargetFramework=net9.0"
+                      SetTargetFramework="TargetFramework=net10.0"
                       SkipGetTargetFrameworkProperties="true" />
   </ItemGroup>
 

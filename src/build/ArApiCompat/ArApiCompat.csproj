@@ -6,11 +6,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
     <Nullable>enable</Nullable>
-    <NoWarn>$(NoWarn);CA1043;CA1028;CA1031</NoWarn>
+    <NoWarn>$(NoWarn);CA1043;CA1028;CA1031;CA1515</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AsmResolver.DotNet" Version="6.0.0-development.278" />
+    <PackageReference Include="AsmResolver.DotNet" Version="6.0.0-development.358" />
   </ItemGroup>
 
 </Project>

@@ -63,7 +63,7 @@ var fwReducer = new FrameworkReducer();
 // first, arrange the lookups in a reasonable manner
 // pkgPath -> framework -> dllPaths
 var packageLayout = new Dictionary<string, Dictionary<NuGetFramework, List<(string dllPath, string dllName)>>>();
-var dllsByDllName = new Dictionary<string, Dictionary<NuGetFramework, List<string>>>();
+var dllsByDllName = new Dictionary<string, Dictionary<NuGetFramework, List<ModuleDefinition>>>();
 foreach (var (pkgPath, libPath, framework, dllPath) in pkgList
     .SelectMany(ta
         => ta.Item2.SelectMany(tb
@@ -85,6 +85,8 @@ foreach (var (pkgPath, libPath, framework, dllPath) in pkgList
         continue;
     }
 
+    var dll = ModuleDefinition.FromFile(dllPath, readerParams);
+
     pathList.Add((dllPath, dllName));
 
     if (!dllsByDllName.TryGetValue(dllName, out var dllPathList))
@@ -97,7 +99,7 @@ foreach (var (pkgPath, libPath, framework, dllPath) in pkgList
         dllPathList.Add(framework, dllPathSet = new());
     }
 
-    dllPathSet.Add(dllPath);
+    dllPathSet.Add(dll);
 }
 
 // collect the list of ALL target frameworks that we might care about
@@ -172,7 +174,7 @@ var backportsReferenceBase = new AssemblyReference(
 var importedSet = new Dictionary<string, ExportedType>();
 foreach (var (targetTfm, assemblies) in frameworkAssemblies)
 {
-    foreach (var (dllName, _) in assemblies)
+    foreach (var dllName in assemblies.Select(x => x.Item1).Distinct())
     {
         importedSet.Clear();
 
@@ -180,9 +182,9 @@ foreach (var (targetTfm, assemblies) in frameworkAssemblies)
         AssemblyDefinition? backportsShimAssembly = null;
         AssemblyReference? backportsReference = null;
 
-        var bclShimPath = GetFrameworkKey(dllsByDllName[dllName], targetTfm, fwReducer).First();
+        var allDlls = dllsByDllName[dllName].Values.SelectMany(x => x).ToArray();
 
-        var bclShim = ModuleDefinition.FromFile(bclShimPath, readerParams);
+        var bclShim = allDlls.OrderByDescending(x => x.Assembly!.Version).First();
 
         var bcl = KnownCorLibs.FromRuntimeInfo(
             DotNetRuntimeInfo.Parse(
@@ -204,12 +206,10 @@ foreach (var (targetTfm, assemblies) in frameworkAssemblies)
 
         backportsReference = backportsReferenceBase.ImportWith(backportsShim.DefaultImporter);
 
-        foreach (var file in dllsByDllName[dllName].Values.SelectMany(x => x))
+        foreach (var file in allDlls)
         {
-            bclShim = ModuleDefinition.FromFile(file, readerParams);
-
             // go through all public types, make sure they exist in the shim, and generate the forwarder
-            foreach (var type in bclShim.TopLevelTypes)
+            foreach (var type in file.TopLevelTypes)
             {
                 void ExportType(TypeDefinition type, bool nested, IImplementation impl)
                 {

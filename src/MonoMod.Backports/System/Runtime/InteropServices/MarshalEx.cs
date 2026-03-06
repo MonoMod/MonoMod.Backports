@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using InlineIL;
+using System.Runtime.CompilerServices;
 
 #if !NET6_0_OR_GREATER
 using System.Reflection;
@@ -39,6 +40,24 @@ namespace System.Runtime.InteropServices
                     throw new PlatformNotSupportedException("Cannot set last P/Invoke error (no method Marshal.SetLastWin32Error or Marshal.SetLastPInvokeError)");
                 del(error);
 #endif
+            }
+
+            public static void InitHandle(SafeHandle safeHandle, nint handle)
+            {
+                SafeHandleHelper.SetHandle(safeHandle, handle);
+            }
+        }
+
+        private abstract class SafeHandleHelper : SafeHandle
+        {
+            private SafeHandleHelper() : base(default, default) => throw new NotSupportedException();
+
+            public static void SetHandle(SafeHandle safeHandle, nint handle)
+            {
+                // this method always exists and is accessible here, roslyn just wont let us call it since it is protected
+                IL.Push(safeHandle);
+                IL.Push(handle);
+                IL.Emit.Callvirt(MethodRef.Method(typeof(SafeHandle), "SetHandle", typeof(nint)));
             }
         }
     }

@@ -317,17 +317,17 @@ namespace System.Runtime.CompilerServices
             string? s;
             if (value is IFormattable)
             {
-                // If the value can format itself directly into our buffer, do so.
-                /*if (value is ISpanFormattable) {
-                    int charsWritten;
-                    while (!((ISpanFormattable) value).TryFormat(_chars.Slice(_pos), out charsWritten, default, _provider)) // constrained call avoiding boxing for value types
-                    {
-                        Grow();
-                    }
+                 // If the value can format itself directly into our buffer, do so.
+                 if (value is ISpanFormattable) {
+                     int charsWritten;
+                     while (!((ISpanFormattable) value).TryFormat(_chars.Slice(_pos), out charsWritten, default, _provider)) // constrained call avoiding boxing for value types
+                     {
+                         Grow();
+                     }
 
-                    _pos += charsWritten;
-                    return;
-                }*/
+                     _pos += charsWritten;
+                     return;
+                 }
 
                 s = ((IFormattable)value).ToString(format: null, _provider); // constrained call avoiding boxing for value types
             }
@@ -376,7 +376,7 @@ namespace System.Runtime.CompilerServices
             if (value is IFormattable)
             {
                 // If the value can format itself directly into our buffer, do so.
-                /*if (value is ISpanFormattable) {
+                if (value is ISpanFormattable) {
                     int charsWritten;
                     while (!((ISpanFormattable) value).TryFormat(_chars.Slice(_pos), out charsWritten, format, _provider)) // constrained call avoiding boxing for value types
                     {
@@ -385,7 +385,7 @@ namespace System.Runtime.CompilerServices
 
                     _pos += charsWritten;
                     return;
-                }*/
+                }
 
                 s = ((IFormattable)value).ToString(format, _provider); // constrained call avoiding boxing for value types
             }
